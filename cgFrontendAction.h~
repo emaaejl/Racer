@@ -1,0 +1,114 @@
+#ifndef LLVM_CLANG_CGFRONTENDACTION_H
+#define LLVM_CLANG_CGFRONTENDACTION_H
+
+
+#include "clang/Driver/Options.h"
+#include "clang/Frontend/ASTConsumers.h"
+#include "clang/Frontend/FrontendActions.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "libExt/CompilerInstanceCtu.h"
+#include "clang/Basic/Diagnostic.h"
+#include "callGraphAnalysis.h"
+#include "commandOptions.h"
+#include <fstream> 
+#include "clang/Lex/Preprocessor.h"
+#include "clang/Tooling/Tooling.h"
+
+using namespace std;
+using namespace clang;
+using namespace clang::driver;
+using namespace clang::tooling;
+using namespace llvm;
+
+class CGFrontendAction : public ASTFrontendAction {
+  CallGraph &_cg;
+public:
+  CGFrontendAction(CallGraph &cg)
+  : _cg (cg) { llvm::errs()<<"CGFrontendAction created\n";}
+
+  virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
+    llvm::errs()<<"Building Call Graph of "<<file.str()<<"\n";
+    std::ofstream Method1(FUNC1.c_str()), Method2(FUNC2.c_str());
+    if (Method1.good() && Method2.good()) //errs()<<"Method Name :"<<FUNC.c_str()<<"\n";
+      return llvm::make_unique<CGReachabilityInf>(&CI,FUNC1.c_str(),FUNC2.c_str(), _cg); 
+    else return llvm::make_unique<CGReachabilityInf>(&CI,_cg);
+  }
+
+~CGFrontendAction(){
+llvm::errs()<<"CGFrontendAction is dying\n";
+}
+
+void EndSourceFileAction() {}  
+void EndSourceFileCtu() { }
+ 
+void EndCompilerActionOnSourceFile() {
+  llvm::errs()<<"a\n";
+  CompilerInstance &CI = getCompilerInstance();
+  llvm::errs()<<"b\n";
+  // Inform the diagnostic client we are done with this source file.
+  CI.getDiagnosticClient().EndSourceFile();
+  llvm::errs()<<"c\n";
+  // Inform the preprocessor we are done.
+  if (CI.hasPreprocessor())
+    CI.getPreprocessor().EndSourceFile();
+  llvm::errs()<<"d\n";
+  // Finalize the action.
+  FrontendAction::EndSourceFileAction();
+  llvm::errs()<<"e\n";
+  // Sema references the ast consumer, so reset sema first.
+  //
+  // FIXME: There is more per-file stuff we could just drop here?
+  bool DisableFree = CI.getFrontendOpts().DisableFree;
+  if (DisableFree) {
+    llvm::errs()<<"f\n";
+    CI.resetAndLeakSema();
+    CI.resetAndLeakASTContext();
+    BuryPointer(CI.takeASTConsumer().get());
+  } else {
+    llvm::errs()<<"g\n";
+    CI.setSema(nullptr);
+    CI.setASTContext(nullptr);
+    CI.setASTConsumer(nullptr);
+  }
+
+  if (CI.getFrontendOpts().ShowStats) {
+    llvm::errs() << "\nSTATISTICS FOR '" << getCurrentFile() << "':\n";
+    CI.getPreprocessor().PrintStats();
+    CI.getPreprocessor().getIdentifierTable().PrintStats();
+    CI.getPreprocessor().getHeaderSearchInfo().PrintStats();
+    CI.getSourceManager().PrintStats();
+    llvm::errs() << "\n";
+  }
+
+  // Cleanup the output streams, and erase the output files if instructed by the
+  // FrontendAction.
+  
+  llvm::errs()<<"h\n";
+  //bool tt=getCompilerInstance().getDiagnostics().hasErrorOccurred();
+  //llvm::errs()<<"hh1\n";
+  bool tt=FrontendAction::shouldEraseOutputFiles();
+  llvm::errs()<<"hh\n";
+  CI.clearOutputFiles(tt);
+  llvm::errs()<<"i\n";
+  if (isCurrentFileAST()) {
+    llvm::errs()<<"j\n";
+    if (DisableFree) {
+      CI.resetAndLeakPreprocessor();
+      CI.resetAndLeakSourceManager();
+      CI.resetAndLeakFileManager();
+    } else {
+      CI.setPreprocessor(nullptr);
+      CI.setSourceManager(nullptr);
+      CI.setFileManager(nullptr);
+    }
+  }
+
+  setCompilerInstance(nullptr);
+// setCurrentInput(FrontendInputFile());
+  CI.getLangOpts().setCompilingModule(LangOptions::CMK_None);
+}
+
+
+};
+
+#endif

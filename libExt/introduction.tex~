@@ -1,0 +1,2 @@
+
+Flow sensitive pointer analysis is required by many program analysis tools. Flow-insensitive analysis is still the dominant pointer analysis that is quite scalable.
