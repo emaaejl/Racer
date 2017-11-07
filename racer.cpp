@@ -183,8 +183,8 @@ int main(int argc, const char **argv) {
        Tool.run(&act);
        std::vector<std::string> hFiles=repo.getHeaderFiles();
        repo.printHeaderList();
-       ClangTool Tool1(op.getCompilations(), hFiles);
-       result = Tool1.run(newFrontendActionFactory<PAFrontendAction>().get());
+       //ClangTool Tool1(op.getCompilations(), hFiles);
+       //result = Tool1.run(newFrontendActionFactory<PAFrontendAction>().get());
     }
     if(CG){
       CallGraph cg;
@@ -216,7 +216,9 @@ int main(int argc, const char **argv) {
       CGFrontendFactory cgFact(cg,vectCI);
       ToolCG.run(&cgFact);
       cg.finishGraphConstruction();
-      cg.viewGraph();      
+
+      if(debugLabel>2)
+	cg.viewGraph();      
       // Race Detection
       result = Tool.run(newFrontendActionFactory<RacerFrontendAction>().get());
       racer->setCallGraph(&cg);

@@ -26,8 +26,6 @@ using std::vector;
 using std::deque;
 using namespace llvm;
 
-//namespace {
-
 
 class Node{
 public:
