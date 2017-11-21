@@ -88,10 +88,10 @@ bool GlobalVarHandler::showVarAccessLoc(std::string loc, std::string accMod)
   if(range.first==locToVarPairMap.end()) return false;
   for (MapType::iterator irange = range.first; irange != range.second; ++irange)
    {
-    errs()<<"["<<accMod<<", Loc:"<<loc<<"]:\t";
+    llvm::outs()<<"["<<accMod<<", Loc:"<<loc<<"]:\t";
     if(get<0>(irange->second)!=get<1>(irange->second))
-      errs()<<std::get<0>(irange->second) <<"->"<<std::get<1>(irange->second)<<" at "<<std::get<2>(irange->second)<<"\n";
-    else errs()<<std::get<0>(irange->second) <<" at "<<std::get<2>(irange->second)<<"\n";
+      llvm::outs()<<std::get<0>(irange->second) <<"->"<<std::get<1>(irange->second)<<" at "<<std::get<2>(irange->second)<<"\n";
+    else llvm::outs()<<std::get<0>(irange->second) <<" at "<<std::get<2>(irange->second)<<"\n";
    }   
    return true;
 }
