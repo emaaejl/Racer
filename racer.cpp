@@ -15,7 +15,7 @@
 #include "symTabBuilder.h"
 #include "raceAnalysis.h"
 #include "headerDepAnalysis.h"
-//#include "callGraphAnalysis.h"
+#include "flowSensitivePA.h"
 #include "CGFrontendAction.h"
 #include "commandOptions.h"
 #include <memory>
@@ -27,13 +27,6 @@ using namespace llvm;
 RaceFinder *racer=new RaceFinder();
 int debugLabel=0;
 
-/*
-void VisualizeCFG(clang::AnalysisDeclContext *ac,clang::CFG *cfg)
-{
-   //errs()<<" Printing CFGs"<<"\n";
-   ac->dumpCFG(false);
-}
-*/
 class PointerAnalysis : public ASTConsumer {
 private:
   SteengaardPAVisitor *visitorPA; 
@@ -62,6 +55,43 @@ public:
     visitorPA->getGvHandler()->showGlobals();
     }   
 };
+
+class FSPointerAnalysis : public ASTConsumer {
+private:
+  FSPAVisitor *visitorPA; 
+  SymTabBuilderVisitor *visitorSymTab;
+public:
+    // override the constructor in order to pass CI
+  explicit FSPointerAnalysis(CompilerInstance *CI,std::string file)
+    : visitorPA(new FSPAVisitor(CI,debugLabel,file)),visitorSymTab(new SymTabBuilderVisitor(CI,debugLabel))
+  {
+  }
+
+  virtual bool HandleTopLevelDecl(clang::DeclGroupRef DG) {
+    errs()<<"first line\n";
+    if (!DG.isSingleDecl()) {
+      return true;
+    }
+    
+    clang::Decl *D = DG.getSingleDecl();
+     errs()<<"second line\n";
+    const clang::FunctionDecl *FD = clang::dyn_cast<clang::FunctionDecl>(D);
+    // Skip other functions
+    if (!FD) {
+      return true;
+    }
+    
+    errs()<<"third checkpoint\n";
+    visitorPA->analyze(D);
+    
+    // recursively visit each AST node in Decl "D"
+    //        visitor->TraverseDecl(D); 
+    
+    return true;
+  }
+    
+};
+
 
 
 class RaceDetector : public ASTConsumer {
@@ -99,6 +129,13 @@ class PAFrontendAction : public ASTFrontendAction {
    }
 };
 
+class PAFlowSensitiveFrontendAction : public ASTFrontendAction {
+ public:
+  virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
+    std::cout<<"Pointer Analysis (Flow Sensitive) of "<<file.str()<<"\n";
+    return llvm::make_unique<FSPointerAnalysis>(&CI,file.str()); // pass CI pointer to ASTConsumer
+   }
+};
 
 
 class RacerFrontendAction : public ASTFrontendAction {
@@ -170,13 +207,14 @@ int main(int argc, const char **argv) {
     if(DebugLevel==O1) debugLabel=1;
     else if(DebugLevel==O2) debugLabel=2;
     else if(DebugLevel==O3) debugLabel=3;
-    if(!Symb && !PA && !HA && !CG && !RA)
+    if(!Symb && !PA && !PAFlow && !HA && !CG && !RA)
     { 
       errs()<<"Analysis options are not provided. See, e.g., racer --help\n";
       return 0;
     }  
     if(Symb) result = Tool.run(newFrontendActionFactory<SymbTabAction>().get());
     if(PA) result = Tool.run(newFrontendActionFactory<PAFrontendAction>().get());
+    if(PAFlow) result = Tool.run(newFrontendActionFactory<PAFlowSensitiveFrontendAction>().get());
     if(HA) {
        RepoGraph repo(debugLabel);
        IncAnalFrontendActionFactory act (repo);
