@@ -6,7 +6,7 @@
 #include "symTabBuilder.h"
 
 void SymTabBuilderVisitor::dumpSymTab(){
-if(debugLabel>1)
+if(debugLabel>2)
   symbTab->dump(); 
 }  
  

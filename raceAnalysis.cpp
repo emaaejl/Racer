@@ -4,6 +4,7 @@
 /****************************************************************/
 
 #include "raceAnalysis.h"
+#include <string>
 
 void RaceFinder::createNewTUAnalysis(GlobalVarHandler * gv)
 {
@@ -21,8 +22,8 @@ void RaceFinder::printRaceResult(const VarsLoc res, unsigned handle, bool read)
     errs()<<"PA analysis does not produce Global Vars info for the TU "<<gv->getTUName()<<"\n";
     return;
   }
-  if(read) str="Read";
-  else str="Write";	       
+  if(read) str="Read_" + to_string(handle);
+  else str="Write_"+ to_string(handle);	       
   for(auto it=res.begin();it!=res.end();it++){
     gv->showVarAccessLoc(it->second,str);
   }	 
@@ -152,7 +153,8 @@ std::pair<VarsLoc,VarsLoc> RaceFinder::refine(std::pair<VarsLoc,VarsLoc> res)
 	    break;
 	  }
   }
-  return std::make_pair(rRefine1,rRefine2);
+  //return std::make_pair(rRefine1,rRefine2);
+  return set_intersect(rRefine1,rRefine2);
 }
 
 std::pair<VarsLoc,VarsLoc> RaceFinder::set_intersect(const VarsLoc S1, const VarsLoc S2)
@@ -195,7 +197,7 @@ std::pair<VarsLoc,VarsLoc> RaceFinder::set_intersect(const VarsLoc S1, const Var
 
 void RaceFinder::extractPossibleRaces()
 {
-  errs()<<"\n-------------------------------------------------------------------------\n\n";
+  llvm::outs()<<"\n-------------------------------------------------------------------------\n\n";
   //          Debug Print
   //printGlobalRead(0);
   //printGlobalWrite(0);
@@ -204,6 +206,14 @@ void RaceFinder::extractPossibleRaces()
   
   VarsLoc read1,read2,write1,write2;
   std::pair<VarsLoc,VarsLoc> res1,res2,res3,refineR1,refineR2,refineR3;
+  if(paInfo.size()!=2)
+   {
+     llvm::outs()<<"Pointer analysis not completed: "<<paInfo.size()<<"\n";
+     llvm::outs()<<"Race analysis returns abnormally\n";
+     llvm::outs()<<"\n------------------------------------------------------------------------------------------------------------\n\n";
+
+     return;
+   }
   std::string tu1=paInfo[0]->getTUName(), tu2=paInfo[1]->getTUName();
   
   read1=getGlobalRead(0);
@@ -219,32 +229,32 @@ void RaceFinder::extractPossibleRaces()
   refineR2=refine(res2);
   refineR3=refine(res3);
 
-  if(refineR1.first.empty() && refineR2.first.empty() && refineR3.first.empty())
-    errs()<<"\t!!!No Data Race found!!! \n";
+  if((refineR1.first.empty() || refineR1.second.empty()) && (refineR2.first.empty() || refineR2.second.empty()) && (refineR3.first.empty() || refineR3.second.empty()))
+    llvm::outs()<<"\t!!!No Data Race found!!! \n";
   else{
-    errs()<<"\t!!!Possible Data Race Detected!!!\n\n";
-    if(!refineR1.first.empty())
+     llvm::outs()<<"\t!!!Possible Data Race Detected!!!\n\n";
+    if(!refineR1.first.empty() && !refineR1.second.empty())
       {
-	errs()<<"Simultaneous Read(by "<<tu1<<"), Write(by "<<tu2<<") possible\n";
-	errs()<<"===================================================================================================\n\n";
+	 llvm::outs()<<"Simultaneous Read(by "<<tu1<<"), Write(by "<<tu2<<") possible\n";
+	 llvm::outs()<<"===================================================================================================\n\n";
 	printRaceResult(refineR1.first,0,true);
 	printRaceResult(refineR1.second,1,false);
 	
       }
-    if(!refineR2.first.empty())
+    if(!refineR2.first.empty() && !refineR2.second.empty())
       {
-	errs()<<"\nSimultaneous Write(by "<<tu1<<"), Read(by "<<tu2<<") possible\n";
-	errs()<<"====================================================================================================\n";
+	 llvm::outs()<<"\nSimultaneous Write(by "<<tu1<<"), Read(by "<<tu2<<") possible\n";
+	 llvm::outs()<<"====================================================================================================\n";
 	printRaceResult(refineR2.first,0,false);
 	printRaceResult(refineR2.second,1,true);	
       }
-    if(!refineR3.first.empty())
+    if(!refineR3.first.empty() && !refineR3.second.empty())
       {
-	errs()<<"\nSimultaneous Write(by "<<tu1<<"), Write(by "<<tu2<<") possible\n";
-	errs()<<"======================================================================================================\n";
+	 llvm::outs()<<"\nSimultaneous Write(by "<<tu1<<"), Write(by "<<tu2<<") possible\n";
+	 llvm::outs()<<"======================================================================================================\n";
 	printRaceResult(refineR3.first,0,false);
 	printRaceResult(refineR3.second,1,false);
       } 
   }      
-  errs()<<"\n------------------------------------------------------------------------------------------------------------\n\n";
+   llvm::outs()<<"\n------------------------------------------------------------------------------------------------------------\n\n";
 }

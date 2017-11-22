@@ -8,8 +8,9 @@ static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 static cl::extrahelp MoreHelp("\nMore help text...");
 
 static cl::opt<bool> Symb("sym",cl::desc("Build and dump the Symbol Table"), cl::cat(RacerOptCat));
-static cl::opt<bool> PA("pa",cl::desc("show pointer analysis info"), cl::cat(RacerOptCat));
-static cl::opt<bool> HA("ha",cl::desc("show header analysis info"), cl::cat(RacerOptCat));
+static cl::opt<bool> PA("pa",cl::desc("Show pointer analysis info"), cl::cat(RacerOptCat));
+static cl::opt<bool> PAFlow("pafs",cl::desc("Show flow sensitive pointer analysis info"), cl::cat(RacerOptCat));
+static cl::opt<bool> HA("ha",cl::desc("Show header analysis info"), cl::cat(RacerOptCat));
 static cl::opt<bool> CG("cg",cl::desc("Call Graph Info"), cl::cat(RacerOptCat));
 static cl::opt<std::string> FUNC1("m1",cl::desc("Initial method from which execution starts"), cl::value_desc("function name"),cl::cat(RacerOptCat));
 static cl::opt<std::string> FUNC2("m2",cl::desc("Initial method from which execution starts"), cl::value_desc("function name"),cl::cat(RacerOptCat));

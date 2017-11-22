@@ -98,9 +98,11 @@ public:
       headers.erase(new_end, headers.end());
       nodes.clear();
     }
+     
     void printHeaderList()
     {
-      if(debugLabel>2)
+      //if(debugLabel>2)
+      std::cout<<"List of  headers included in this task\n";
       for(auto it=headerFiles.begin();it!=headerFiles.end();it++)
 	{
 	  std::cout<<"File: "<<(*it)<<"\n";

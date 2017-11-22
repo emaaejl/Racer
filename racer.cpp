@@ -141,8 +141,8 @@ class PAFlowSensitiveFrontendAction : public ASTFrontendAction {
 class RacerFrontendAction : public ASTFrontendAction {
  public:
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
-    return llvm::make_unique<RaceDetector>(&CI,file.str()); // pass CI pointer to ASTConsumer
-    //return llvm::make_unique<CallGraphASTConsumer>(&CI); // pass CI pointer to ASTConsumer	
+     if(debugLabel>1) llvm::outs()<<"Analyzing File: "<<file.str()<<"\n";
+     return llvm::make_unique<RaceDetector>(&CI,file.str()); // pass CI pointer to ASTConsumer
    }
 };
 
@@ -178,7 +178,7 @@ public:
       // The FrontendAction can have lifetime requirements for Compiler or its
       // members, and we need to ensure it's deleted earlier than Compiler. So we
       // pass it to an std::unique_ptr declared after the Compiler variable.
-  
+      
       std::unique_ptr<FrontendAction> ScopedToolAction(create());
    
       // Create the compiler's actual diagnostics engine.
@@ -200,8 +200,7 @@ int main(int argc, const char **argv) {
 
     CommonOptionsParser op(argc, argv, RacerOptCat);        
     // create a new Clang Tool instance (a LibTooling environment)
-    ClangTool Tool(op.getCompilations(), op.getSourcePathList());
-   	
+    	
     // run the Clang Tool, creating a new FrontendAction (explained below)
     int result;
     if(DebugLevel==O1) debugLabel=1;
@@ -212,10 +211,18 @@ int main(int argc, const char **argv) {
       errs()<<"Analysis options are not provided. See, e.g., racer --help\n";
       return 0;
     }  
-    if(Symb) result = Tool.run(newFrontendActionFactory<SymbTabAction>().get());
-    if(PA) result = Tool.run(newFrontendActionFactory<PAFrontendAction>().get());
     if(PAFlow) result = Tool.run(newFrontendActionFactory<PAFlowSensitiveFrontendAction>().get());
+    if(Symb) {
+      ClangTool Tool(op.getCompilations(), op.getSourcePathList());
+      result = Tool.run(newFrontendActionFactory<SymbTabAction>().get());
+    }
+    if(PA)
+      {
+      ClangTool Tool(op.getCompilations(), op.getSourcePathList());
+      result = Tool.run(newFrontendActionFactory<PAFrontendAction>().get());
+      }
     if(HA) {
+       ClangTool Tool(op.getCompilations(), op.getSourcePathList());
        RepoGraph repo(debugLabel);
        IncAnalFrontendActionFactory act (repo);
        Tool.run(&act);
@@ -226,6 +233,7 @@ int main(int argc, const char **argv) {
     }
     if(CG){
       CallGraph cg;
+      ClangTool Tool(op.getCompilations(), op.getSourcePathList());
       std::vector<std::unique_ptr<clang::CompilerInstanceCtu> > vectCI;
       CGFrontendFactory cgFact(cg,vectCI);
       result=Tool.run(&cgFact);
@@ -246,19 +254,51 @@ int main(int argc, const char **argv) {
 	return 0;	  
       }
 
+      // header Analysis
+      /*      std::string Task1=op.getSourcePathList()[0];
+      std::string Task2=op.getSourcePathList()[1];
+      RepoGraph repo1(debugLabel),repo2(debugLabel);
+      IncAnalFrontendActionFactory act1 (repo1);
+      IncAnalFrontendActionFactory act2 (repo2);
+      std::vector<std::string> Vect1,Vect2;
+      Vect1.push_back(Task1);
+      Vect2.push_back(Task2);
+      ClangTool ToolHa1(op.getCompilations(),Vect1);
+      ClangTool ToolHa2(op.getCompilations(),Vect2);
+      ToolHa1.run(&act1);
+      std::vector<std::string> HFileList1=repo1.getHeaderFiles();
+      result=ToolHa2.run(&act2);
+      std::vector<std::string> HFileList2=repo2.getHeaderFiles();
+      std::cout<<"Task: "<<Task1<<"\n";
+      repo1.printHeaderList();
+      std::cout<<"Task: "<<Task2<<"\n";
+      repo2.printHeaderList();
+      */
       // Call Graph Construction
-
+      
       ClangTool ToolCG(op.getCompilations(), op.getSourcePathList());
       CallGraph cg;
       std::vector<std::unique_ptr<clang::CompilerInstanceCtu> > vectCI;
       CGFrontendFactory cgFact(cg,vectCI);
       ToolCG.run(&cgFact);
       cg.finishGraphConstruction();
-
+      llvm::errs()<<"CG construction finished\n";
       if(debugLabel>2)
 	cg.viewGraph();      
+
       // Race Detection
+      /*  std::vector< std::string > sop=op.getSourcePathList();
+      for(std::vector< std::string >::iterator i=sop.begin();i!=sop.end();i++)
+	llvm::outs()<<"OP Source Paths: "<<*i<<"\n";
+      */
+      ClangTool Tool(op.getCompilations(), op.getSourcePathList());
+
+      /*llvm::ArrayRef< std::string > spaths=Tool.getSourcePaths(); 
+      for(llvm::ArrayRef< std::string >::iterator it=spaths.begin();it!=spaths.end();it++)
+	llvm::outs()<<"Source Paths: "<<*it<<"\n";
+      */
       result = Tool.run(newFrontendActionFactory<RacerFrontendAction>().get());
+      llvm::errs()<<"Race tool run finished\n";
       racer->setCallGraph(&cg);
       std::ofstream Method1(FUNC1.c_str()), Method2(FUNC2.c_str());
       if (Method1.good() && Method2.good()) 
@@ -273,7 +313,7 @@ int main(int argc, const char **argv) {
 	    cgFrontend->EndFrontendAction();
 	  it->get()->EndCompilerActionOnSourceFile();
 	}
-
+      
     }
 
    return result;

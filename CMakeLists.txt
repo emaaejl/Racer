@@ -23,6 +23,8 @@ add_clang_executable(racer
   steengaardPA.cpp
   steengaardPAVisitor.h
   steengaardPAVisitor.cpp
+  flowSensitivePA.h
+  flowSensitivePA.cpp
   symtab.h
   symtab.cpp
   symTabBuilder.h
