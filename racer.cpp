@@ -18,6 +18,7 @@
 #include "flowSensitivePA.h"
 #include "CGFrontendAction.h"
 #include "commandOptions.h"
+#include "eventHandler.h"
 #include <memory>
 using namespace clang::driver;
 using namespace clang::tooling;
@@ -197,32 +198,33 @@ public:
 
 int main(int argc, const char **argv) {
     // parse the command-line args passed to your code 
-
     CommonOptionsParser op(argc, argv, RacerOptCat);        
+    
     // create a new Clang Tool instance (a LibTooling environment)
-    	
+    ClangTool Tool(op.getCompilations(), op.getSourcePathList());	
     // run the Clang Tool, creating a new FrontendAction (explained below)
     int result;
     if(DebugLevel==O1) debugLabel=1;
     else if(DebugLevel==O2) debugLabel=2;
     else if(DebugLevel==O3) debugLabel=3;
-    if(!Symb && !PA && !PAFlow && !HA && !CG && !RA)
-    { 
-      errs()<<"Analysis options are not provided. See, e.g., racer --help\n";
-      return 0;
-    }  
+    if(Test)
+      {
+	LoopPrinter Printer;
+	MatchFinder Finder;
+	//Finder.addMatcher(LoopMatcher, &Printer);
+	Finder.addMatcher(CallExprMatcher, &Printer);
+	Finder.addMatcher(CallExprMatcher1, &Printer);
+	return Tool.run(newFrontendActionFactory(&Finder).get());
+      }  
     if(PAFlow) result = Tool.run(newFrontendActionFactory<PAFlowSensitiveFrontendAction>().get());
     if(Symb) {
-      ClangTool Tool(op.getCompilations(), op.getSourcePathList());
       result = Tool.run(newFrontendActionFactory<SymbTabAction>().get());
     }
     if(PA)
       {
-      ClangTool Tool(op.getCompilations(), op.getSourcePathList());
       result = Tool.run(newFrontendActionFactory<PAFrontendAction>().get());
       }
     if(HA) {
-       ClangTool Tool(op.getCompilations(), op.getSourcePathList());
        RepoGraph repo(debugLabel);
        IncAnalFrontendActionFactory act (repo);
        Tool.run(&act);
@@ -233,7 +235,6 @@ int main(int argc, const char **argv) {
     }
     if(CG){
       CallGraph cg;
-      ClangTool Tool(op.getCompilations(), op.getSourcePathList());
       std::vector<std::unique_ptr<clang::CompilerInstanceCtu> > vectCI;
       CGFrontendFactory cgFact(cg,vectCI);
       result=Tool.run(&cgFact);
@@ -291,7 +292,6 @@ int main(int argc, const char **argv) {
       for(std::vector< std::string >::iterator i=sop.begin();i!=sop.end();i++)
 	llvm::outs()<<"OP Source Paths: "<<*i<<"\n";
       */
-      ClangTool Tool(op.getCompilations(), op.getSourcePathList());
 
       /*llvm::ArrayRef< std::string > spaths=Tool.getSourcePaths(); 
       for(llvm::ArrayRef< std::string >::iterator it=spaths.begin();it!=spaths.end();it++)
