@@ -19,25 +19,31 @@ bool SymTabBuilderVisitor::VisitFunctionDecl(FunctionDecl *func)
   else fname="Global";
   SymFuncDeclCxtClang *ident=new SymFuncDeclCxtClang(func);
   symbTab->addSymb(ident);
-  unsigned id=ident->getId();
-  for(unsigned int i=0; i<func->getNumParams(); i++)
+  unsigned long id=ident->getId();
+  for(unsigned int i=0; i<func->param_size(); i++)
   {
     clang::ParmVarDecl *p=func->parameters()[i];
     if(clang::VarDecl *vd=dyn_cast<clang::VarDecl>(p))
-    if(clang::ValueDecl *val=dyn_cast<clang::ValueDecl>(vd))
-    {	    
-      if(!vd->getType()->isPointerType())
-       {
-        SymArgVarCxtClang *arg=new SymArgVarCxtClang(val,NOPTR,id,fname);
+      {  
+	if(clang::ValueDecl *val=dyn_cast<clang::ValueDecl>(vd)){	    
+	  if(!vd->getType()->isPointerType())
+	    {
+	      SymArgVarCxtClang *arg=new SymArgVarCxtClang(val,NOPTR,id,fname);
+	      symbTab->addSymb(arg);
+	      ident->insertArg(arg);
+	    } 
+	  else{
+	    SymArgVarCxtClang *arg=new SymArgVarCxtClang(val,PTRONE,id,fname);
+	    ident->insertArg(arg);
+	    symbTab->addSymb(arg);
+	  }   
+	}}
+    else
+      {
+	SymArgVarCxtClang *arg=new SymArgVarCxtClang(p,NOPTR,id,fname);
         symbTab->addSymb(arg);
         ident->insertArg(arg);
-       } 
-      else{
-        SymArgVarCxtClang *arg=new SymArgVarCxtClang(val,PTRONE,id,fname);
-        ident->insertArg(arg);
-        symbTab->addSymb(arg);
-       }   
-    }
+      }
   }
   if(!func->getReturnType().getTypePtr()->isVoidType())
   {
@@ -45,6 +51,7 @@ bool SymTabBuilderVisitor::VisitFunctionDecl(FunctionDecl *func)
      symbTab->addSymb(ret);
      ident->insertRet(ret);
    } 
+  ident->haveSignature();
  return true;
 }
     

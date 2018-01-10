@@ -7,7 +7,10 @@ static cl::OptionCategory RacerOptCat("Static Analysis Options");
 static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 static cl::extrahelp MoreHelp("\nMore help text...");
 
-static cl::opt<bool> Test("test",cl::desc("Test different clang options"), cl::cat(RacerOptCat));
+static cl::opt<string> Event("e", cl::desc("Stores activity event in filename"), cl::value_desc("filename"),cl::cat(RacerOptCat));
+static cl::list<std::string> StartFuncsForEvents("ef", cl::desc("possible name of functions in which events may occur"),cl::multi_val(cl::ZeroOrMore),cl::cat(RacerOptCat));
+
+//static cl::opt<bool> Test("test",cl::desc("Test different clang options"), cl::cat(RacerOptCat));
 static cl::opt<bool> Symb("sym",cl::desc("Build and dump the Symbol Table"), cl::cat(RacerOptCat));
 static cl::opt<bool> PA("pa",cl::desc("Show pointer analysis info"), cl::cat(RacerOptCat));
 static cl::opt<bool> PAFlow("pafs",cl::desc("Show flow sensitive pointer analysis info"), cl::cat(RacerOptCat));

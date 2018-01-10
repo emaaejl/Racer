@@ -5,13 +5,13 @@
 
 #include "globalVarHandler.h"
   
-void GlobalVarHandler::insert(unsigned var, string loc)
+void GlobalVarHandler::insert(unsigned long var, string loc)
 { 
   globals.insert(loc);
   globalVarId.insert(var);
-  globalVarMap.insert(std::pair<unsigned,string>(var,loc));
+  globalVarMap.insert(std::pair<unsigned long,string>(var,loc));
 }
-std::string GlobalVarHandler::getVarAsLoc(unsigned var)
+std::string GlobalVarHandler::getVarAsLoc(unsigned long var)
 {
   // var should be from the globals set
   auto it=globalVarMap.find(var);
@@ -21,7 +21,7 @@ std::string GlobalVarHandler::getVarAsLoc(unsigned var)
     assert(0);   //execution should not reach here
 }  
 
-void GlobalVarHandler::storeGlobalRead(const std::set<unsigned> &vars, std::string l)
+void GlobalVarHandler::storeGlobalRead(const std::set<unsigned long> &vars, std::string l)
 { 
 for(SetIter i=vars.begin();i!=vars.end();i++)
   {
@@ -31,7 +31,7 @@ for(SetIter i=vars.begin();i!=vars.end();i++)
   }
 }
 
-void GlobalVarHandler::storeGlobalWrite(const std::set<unsigned> &vars, std::string l)
+void GlobalVarHandler::storeGlobalWrite(const std::set<unsigned long> &vars, std::string l)
 {
   for(SetIter i=vars.begin();i!=vars.end();i++){
     std::string var=getVarAsLoc(*i);

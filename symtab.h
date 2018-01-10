@@ -29,26 +29,43 @@ typedef enum {VAR,EXPR, CALLEXPR,FUNCDECL,ARGVAR, RET, NAI} IdentType;    // NAI
 class FuncSignature
 {
 public:
-FuncSignature(unsigned id,std::vector<unsigned> &args, std::vector<unsigned> &rturn)
+FuncSignature(unsigned long id,std::vector<unsigned long> &args, std::vector<unsigned long> &rturn)
 {
   fid=id;
   params=args;
   rets=rturn;
 }
 ~FuncSignature(){}
- unsigned fid;
- std::vector<unsigned> params;
- std::vector<unsigned> rets;
+ void dump(){
+   llvm::outs()<<"FuncId: "<<fid<<"\n Params: ";
+   std::vector<unsigned long>::iterator it=params.begin();
+   while(it!=params.end())
+     {
+       llvm::outs()<<*it;
+       it++;
+     }
+   llvm::outs()<<"\n Rets: ";
+   it=rets.begin();
+   while(it!=rets.end())
+     {
+       llvm::outs()<<*it;
+       it++;
+     }
+   llvm::outs()<<"\n";
+ }
+ unsigned long fid;
+ std::vector<unsigned long> params;
+ std::vector<unsigned long> rets;
 };
 
 class SymBase
 {
  public: 
- SymBase(): _id(static_cast<unsigned int>(-1)){}
- SymBase(unsigned id): _id(id){}   
+ SymBase(): _id(static_cast<unsigned long int>(-1)){}
+ SymBase(unsigned long id): _id(id){}   
  virtual ~SymBase(){}   
- inline unsigned getId() const {return _id;}
- inline void setId(unsigned id){_id=id;}
+ inline unsigned long getId() const {return _id;}
+ inline void setId(unsigned long id){_id=id;}
   virtual void dump(){}
   virtual clang::ValueDecl * getVarDecl() const {return NULL;}
   virtual clang::FunctionDecl *getFuncDecl() const {return NULL;}
@@ -57,7 +74,7 @@ class SymBase
   virtual IdentType getType(){return NAI;}
   std::string ptrTypeToStr(PtrType ptr);
  private:
-  unsigned _id;
+  unsigned long _id;
 };
 
 class SymVarCxtClang: public SymBase
@@ -82,7 +99,7 @@ class SymExprCxtClang: public SymBase
 public:
  SymExprCxtClang(): SymBase(){ _exp=NULL;}
  SymExprCxtClang(clang::Expr *exp): SymBase(){_exp=exp;}
- SymExprCxtClang(unsigned id, clang::Expr *exp): SymBase(id){_exp=exp;}
+ SymExprCxtClang(unsigned long id, clang::Expr *exp): SymBase(id){_exp=exp;}
  inline void dump(){ errs()<<"Expr Not Dump"; errs()<<"\t EXPR \t No\n";} 
  inline IdentType getType(){return EXPR;}
  inline virtual clang::ValueDecl * getVarDecl() const {return NULL;}
@@ -113,24 +130,40 @@ private:
 class SymArgVarCxtClang: public SymBase
 {
 public:
- SymArgVarCxtClang(clang::ValueDecl *val, PtrType ptr, unsigned fid, std::string func): SymBase()
+  
+ SymArgVarCxtClang(clang::ValueDecl *val, PtrType ptr, unsigned long fid, std::string func): SymBase()
     {
-      _arg=val; _subtype=ptr;_funid=fid;scope=func;
+      _arg=val; _subtype=ptr;_funid=fid;scope=func; isVarArg=true;
     }
-  inline void dump()
+  
+ SymArgVarCxtClang(clang::ParmVarDecl *val, PtrType ptr, unsigned long fid, std::string func): SymBase()
+    {
+      _arg=val; _subtype=ptr;_funid=fid;scope=func; isVarArg=false;
+    }
+   
+ inline void dump()
   { 
     errs()<<"\t\t"<<_arg->getNameAsString()<< " ("<< scope <<")"; 
     errs()<<"\t\t FuncArgVar \t "<<ptrTypeToStr(_subtype)<<"\n";
   } 
   inline IdentType getType(){return ARGVAR;}
-  inline virtual clang::ValueDecl * getVarDecl() const {return _arg;}
+  inline virtual clang::ValueDecl * getVarDecl() const {
+    return _arg;
+  }
+  inline virtual clang::ParmVarDecl * getParmDecl() const 
+    {
+      if(!isVarArg)
+	return (clang::ParmVarDecl *)_arg;
+      return NULL;
+    }
   inline clang::FunctionDecl *getFuncDecl() const {return NULL;}
   inline FuncSignature *getFuncSig() const {return NULL;}
 private:
   clang::ValueDecl * _arg;
-  unsigned _funid;
+  unsigned long _funid;
   PtrType _subtype;
-  std::string scope;
+  bool isVarArg;
+  std::string scope;      // name of function in which the argument is located
 };
 
 class SymFuncDeclCxtClang: public SymBase
@@ -150,6 +183,7 @@ public:
  inline clang::FunctionDecl *getFuncDecl() const {return _func;}
  inline FuncSignature *getFuncSig() const {return _fsig;}
  FuncSignature *buildSign();
+ void haveSignature(){_fsig=buildSign();}
 private:
   clang::FunctionDecl * _func;
   FuncSignature * _fsig;
@@ -163,21 +197,21 @@ class SymTab
 public:
   SymTab(){}
   virtual ~SymTab(){};
-  unsigned addSymb(T *symb)
+  unsigned long addSymb(T *symb)
   {
-    unsigned key=_tab.size();
+    unsigned long key=_tab.size();
     _tab.resize(key+1);
     _tab[key] = symb;
-    _map.insert(std::pair<T*,unsigned>(symb,key));  
+    _map.insert(std::pair<T*,unsigned long>(symb,key));  
     if(symb->getType()==VAR|| symb->getType()==ARGVAR)
-      _varmap.insert(std::pair<clang::ValueDecl *,unsigned>(symb->getVarDecl(),key));
+      _varmap.insert(std::pair<clang::ValueDecl *,unsigned long>(symb->getVarDecl(),key));
     
     if(symb->getType()==FUNCDECL)
-      _funcmap.insert(std::pair<clang::FunctionDecl *,unsigned>(symb->getFuncDecl(),key));
+      _funcmap.insert(std::pair<clang::FunctionDecl *,unsigned long>(symb->getFuncDecl(),key));
     symb->setId(key);
     return key;
   }
-  T *lookupSymb(unsigned key) const
+  T *lookupSymb(unsigned long key) const
   {
     if(valid(key))
       return _tab[key];
@@ -204,8 +238,8 @@ public:
       return (it->second);
     else return -1;
   }
-  unsigned size(){return _tab.size();}
-  void getVarsAndFuncs(std::set<unsigned> &vars, std::set<FuncSignature *> &funcs) const
+  unsigned long size(){return _tab.size();}
+  void getVarsAndFuncs(std::set<unsigned long> &vars, std::set<FuncSignature *> &funcs) const
   {
     for(auto it=_tab.begin();it!=_tab.end();it++)
     {
@@ -217,7 +251,7 @@ public:
         }
     }  
   }
-  void dump(unsigned key)
+  void dump(unsigned long key)
   {
     if(valid(key))
       _tab[key]->dump();
@@ -236,12 +270,12 @@ public:
     errs()<< "-----------------------------------------------------------------\n";
   }
 protected:
-  bool valid(unsigned key) const{ return key>=0 && key <_tab.size();}
+  bool valid(unsigned long key) const{ return key>=0 && key <_tab.size();}
 
 private:
-  std::map<T *,unsigned> _map;
-  std::map<clang::ValueDecl *,unsigned> _varmap;
-  std::map<clang::FunctionDecl *,unsigned> _funcmap;
+  std::map<T *,unsigned long> _map;
+  std::map<clang::ValueDecl *,unsigned long> _varmap;
+  std::map<clang::FunctionDecl *,unsigned long> _funcmap;
   std::vector<T *> _tab;
 };
 

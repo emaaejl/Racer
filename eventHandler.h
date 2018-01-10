@@ -1,18 +1,36 @@
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "callGraphAnalysis.h"
+#include <fstream>
 
 using namespace clang;
 using namespace clang::ast_matchers;
 
-StatementMatcher LoopMatcher =
-  forStmt(hasLoopInit(declStmt(hasSingleDecl(varDecl(
-    hasInitializer(integerLiteral(equals(0)))))))).bind("forLoop");
 
-StatementMatcher CallExprMatcher=callExpr(callee(functionDecl(hasName("inc1")))).bind("specificcallexpr");
-StatementMatcher CallExprMatcher1=callExpr(callee(functionDecl(hasName("add2")))).bind("specificcallexpr1");
+StatementMatcher BindThread=callExpr(callee(functionDecl(hasName("bbiTcbb_eventMediator_bindThread"))),hasAncestor(functionDecl().bind("ThreadCaller"))).bind("bThread");
+StatementMatcher BindActivator=callExpr(callee(functionDecl(hasName("bbiTcbb_eventMediator_bindActivator"))),hasAncestor(functionDecl().bind("ActivatorCaller"))).bind("bActivator");
+StatementMatcher JoinConfig=callExpr(callee(functionDecl(hasName("bbiTcbb_eventMediator_joinConfig"))),hasAncestor(functionDecl().bind("JoinCaller"))).bind("bJoinConfig");
+StatementMatcher Trigger=callExpr(callee(functionDecl(hasName("bbiTcbb_eventMediator_trigger"))),hasAncestor(functionDecl().bind("TrigCaller"))).bind("bTrigger");
 
-class LoopPrinter : public MatchFinder::MatchCallback {
-public :
+
+class EventRecorder : public MatchFinder::MatchCallback {
+  std::ofstream & EventFile;
+  CGReachability cgR;
+ public :
+ EventRecorder(std::ofstream & o, CallGraph *cg,std::vector<std::string> startFuncsEvents):EventFile(o),cgR(cg,startFuncsEvents){llvm::errs()<<"constructor\n";}
+
+  const clang::Expr* IgnoreOtherCastParenExpr(const clang::Expr *E)
+  {
+
+    if (const ImplicitCastExpr *P = dyn_cast<ImplicitCastExpr>(E)) 
+      return  IgnoreOtherCastParenExpr(P->getSubExpr()->IgnoreImplicit()->IgnoreParenCasts());
+    else if (const CStyleCastExpr *P = dyn_cast<CStyleCastExpr>(E)) 
+      return  IgnoreOtherCastParenExpr(P->getSubExpr()->IgnoreImplicit()->IgnoreParenCasts());
+    else if (const ParenExpr *P = dyn_cast<ParenExpr>(E)) 
+      return  IgnoreOtherCastParenExpr(P->IgnoreParenCasts()->IgnoreImplicit());  
+    else return  E->IgnoreParenCasts()->IgnoreImplicit();  
+  } 
+
 
   std::string getArgumentName(const clang::Expr * exp)
    {
@@ -25,23 +43,64 @@ public :
      if(const clang::UnaryOperator *uop=dyn_cast<clang::UnaryOperator>(exp))
        if(const clang::Expr *subexp=uop->getSubExpr()->IgnoreImplicit())
 	 return getArgumentName(subexp);
-     return "";
+     
+     if(const clang::StringLiteral *strExpr=clang::dyn_cast<clang::StringLiteral>(exp)){
+       std::string str=strExpr->getString().str();
+       return str.substr(17);
+     }
+     //exp->dump();
+     //llvm::errs()<<"Graph: blabla\n";
+     return "item_not_found";
    }
 
+  void recordCallArguments(const CallExpr *call)
+  {
+    for(unsigned i=1;i<call->getNumArgs();i++){
+      const clang::Expr* exp=call->getArg(i)->IgnoreImplicit()->IgnoreParenCasts();
+      const clang::Expr* E=IgnoreOtherCastParenExpr(exp);
+      EventFile<<"\""<<getArgumentName(E)<<"\"";
+      if(i==call->getNumArgs()-1) EventFile<<")."; else EventFile<<",";
+    }
+    EventFile<<std::endl;
+  }
+
   virtual void run(const MatchFinder::MatchResult &Result) {
-    const CallExpr *call;
-    //if (const ForStmt *FS = Result.Nodes.getNodeAs<clang::ForStmt>("forLoop"))
-    //  FS->dump();
-    if ( (call= Result.Nodes.getNodeAs<clang::CallExpr>("specificcallexpr"))||((call= Result.Nodes.getNodeAs<clang::CallExpr>("specificcallexpr1"))))
-     {
-       llvm::outs()<< "Parameters: ";
-       for(unsigned i=0;i<call->getNumArgs();i++){
-	 const clang::Expr* exp=call->getArg(i)->IgnoreImplicit();
-	 llvm::outs()<<getArgumentName(exp)<<" ";
-       }
-       llvm::outs()<<"\n";
-       call->dump();
-     } 
-    else llvm::outs()<<"Call Expr not found";
+    if (const CallExpr *call= Result.Nodes.getNodeAs<clang::CallExpr>("bThread")) 
+      //if(const FunctionDecl *caller= Result.Nodes.getNodeAs<clang::FunctionDecl>("ThreadCaller"))
+	{
+	  // llvm::errs()<<"threadEvent\n";
+	  EventFile<<"threadEvent(";
+	  recordCallArguments(call);
+     }
+    if(const CallExpr *call= Result.Nodes.getNodeAs<clang::CallExpr>("bActivator"))
+      //if(const FunctionDecl *caller= Result.Nodes.getNodeAs<clang::FunctionDecl>("ActivatorCaller"))
+	  {
+	    //llvm::errs()<<"ActivatorEvent\n";
+	    EventFile<<"activatorEvent(";
+	    recordCallArguments(call);
+      }  
+    if (const CallExpr *call= Result.Nodes.getNodeAs<clang::CallExpr>("bJoinConfig")) 
+      // if(const FunctionDecl *caller= Result.Nodes.getNodeAs<clang::FunctionDecl>("JoinCaller"))
+	{
+	  EventFile<<"joinConfigEvent(";
+	  recordCallArguments(call);
+	}
+    if (const CallExpr *call= Result.Nodes.getNodeAs<clang::CallExpr>("bTrigger"))
+	if(const FunctionDecl *caller= Result.Nodes.getNodeAs<clang::FunctionDecl>("TrigCaller")) {
+
+	  llvm::errs()<<"1\n";
+	  std::string callerName=caller->getNameInfo().getAsString();
+	  llvm::errs()<<"2\n";
+	  std::string from=cgR.reachableFrom(callerName);
+	  llvm::errs()<<"3\n";
+	  std::string sName;
+	  if(from=="not_found") sName=callerName; 
+	  else sName=from; 
+	  EventFile<<"triggerEvent(\""<<sName<<"\",";
+	  llvm::errs()<<"4\n";
+	  recordCallArguments(call);
+	  llvm::errs()<<"5\n";
+     }
+    
   }
 };

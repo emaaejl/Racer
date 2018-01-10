@@ -36,9 +36,9 @@ private:
   FuncSignature * current_fs;
   std::string currFuncStartLoc;
   bool isVisitingFunc;
-  std::multimap<clang::SourceLocation,std::pair<unsigned,AccessType> >  varMod; 
+  std::multimap<clang::SourceLocation,std::pair<unsigned long,AccessType> >  varMod; 
   // varAccInfo: Location of Access, Var Id, Read/Write, FunctionLocation
-  std::multimap<clang::SourceLocation,std::tuple<unsigned,AccessType,std::string> > varAccInfo; 
+  std::multimap<clang::SourceLocation,std::tuple<unsigned long,AccessType,std::string> > varAccInfo; 
   int debugLabel;
 public:
   explicit SteengaardPAVisitor(CompilerInstance *CI, int dl,std::string file) 
@@ -51,18 +51,18 @@ public:
   void buildPASet();
   void rebuildPASet();
   void showPAInfo(bool prIntrls=false); 
-  void recordVarAccess(clang::SourceLocation l, std::pair<unsigned,AccessType> acc);
+  void recordVarAccess(clang::SourceLocation l, std::pair<unsigned long,AccessType> acc);
   void showVarReadWriteLoc();
   void storeGlobalPointers();
   bool VisitFunctionDecl(FunctionDecl *func);
-  std::pair<unsigned,PtrType> getExprIdandType(clang::Expr *exp);
+  std::pair<unsigned long,PtrType> getExprIdandType(clang::Expr *exp);
   void updatePAonUnaryExpr(clang::UnaryOperator *uop);
   void updatePAonBinaryExpr(clang::BinaryOperator *bop);
   bool VisitStmt(Stmt *st);
   std::set<FunctionDecl *> getCallsFromFuncPtr(CallExpr *call);
   void updatePAOnFuncCall(FunctionDecl *calleeDecl,std::set<Expr*> ActualInArgs,long ActualOutArg);
   void updatePAOnCallExpr(CallExpr *call,long ActOutArg);
-  void updatePABasedOnExpr(unsigned id, Expr * exp);
+  void updatePABasedOnExpr(unsigned long id, Expr * exp);
   bool traverse_subExpr(Expr * exp);
   bool VisitVarDecl(VarDecl *vDecl);
  

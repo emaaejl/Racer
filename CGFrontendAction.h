@@ -37,7 +37,8 @@ public:
     //Perform pointer analysis first on this translation unit
     visitorSymTab->TraverseDecl(Context.getTranslationUnitDecl());
     //visitorSymTab->dumpSymTab();
-    visitorPA->initPA(visitorSymTab->getSymTab());
+    
+    visitorPA->initPA(visitorSymTab->getSymTab());	 
     visitorPA->TraverseDecl(Context.getTranslationUnitDecl());
     TranslationUnitDecl *tu=Context.getTranslationUnitDecl();
     CG.setPA(visitorPA); 
@@ -48,12 +49,12 @@ public:
 
 class CGFrontendAction : public ASTFrontendAction {
   CallGraph &_cg;
-public:
-  CGFrontendAction(CallGraph &cg)
-  : _cg (cg) {}
-
+ public:
+ CGFrontendAction(CallGraph &cg)
+   : _cg (cg) {}
+  
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
-    llvm::errs()<<"Building Call Graph of "<<file.str()<<"\n"; 
+    //llvm::errs()<<"Building Call Graph of "<<file.str()<<"\n"; 
     return llvm::make_unique<CGConsumer>(&CI,_cg,file.str());
   }
 

@@ -19,7 +19,8 @@
 #include "clang/Analysis/CFG.h"
 
 // Error in clang Web help: shows "clang/Analysis/AnalysisDeclContext.h"
-#include "clang/Analysis/AnalysisContext.h"
+//#include "clang/Analysis/AnalysisContext.h"
+#include "clang/Analysis/AnalysisDeclContext.h"
 
 #include <vector>
 #include <algorithm>
@@ -39,14 +40,14 @@ private:
   //  bool analPointers;                           
   // FuncSignature * current_fs;
   //std::string currFuncStartLoc;
-  bool isVisitingFunc;
+  //bool isVisitingFunc;
   // std::multimap<clang::SourceLocation,std::pair<unsigned,AccessType> >  varMod; 
  
   // std::multimap<clang::SourceLocation,std::tuple<unsigned,AccessType,std::string> > varAccInfo; 
-  int debugLabel;
+  //int debugLabel;
 public:
   explicit FSPAVisitor(CompilerInstance *CI, int dl,std::string file) 
-    : astContext(&(CI->getASTContext())), gv(file), isVisitingFunc(false), debugLabel(dl) // initialize private members
+    : astContext(&(CI->getASTContext())), gv(file) // isVisitingFunc(false), debugLabel(dl) // initialize private members
     {}
 
   void initPA(SymTab<SymBase> *symbTab);

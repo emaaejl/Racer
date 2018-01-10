@@ -26,7 +26,7 @@ void SymVarCxtClang::dump()
   
 FuncSignature *SymFuncDeclCxtClang::buildSign()
 {
-  std::vector<unsigned> args,rets;
+  std::vector<unsigned long> args,rets;
   for(auto it=_params.begin();it!=_params.end();it++)
     args.push_back((*it)->getId());   
   for(auto it=_rets.begin();it!=_rets.end();it++)

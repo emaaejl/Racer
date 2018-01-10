@@ -41,16 +41,16 @@ public:
 
    // For creating the analysis data structures. The vars data structure
    // is the set of variables, where each variable is identified by an
-   // integer. The funcs data structure is a representation of each
-   // function as an integer (idenitifying the function name) and two
-   // sets of integers (identifying its formal in and out argument
+   // long integer. The funcs data structure is a representation of each
+   // function as an long integer (idenitifying the function name) and two
+   // sets of long integers (identifying its formal in and out argument
    // parameters), where the formal parameters should already be part of
    // the vars set.
   CSteensgaardPA();
   //   CSteensgaardPA(std::auto_ptr<CSteensgaardAnalysisBuilder> builder, CGenericProgram *ast, const CSymTabBase *symtab);
    // If we want to add an extra set of x := &y gotten from abstract annotations.
   //  CSteensgaardPA(std::auto_ptr<CSteensgaardAnalysisBuilder> builder, CGenericProgram *ast,
-  //              const CSymTabBase *symtab, const std::set<std::pair<int,std::set<int> > > *def_addresses_pairs);
+  //              const CSymTabBase *symtab, const std::set<std::pair<long int,std::set<long int> > > *def_addresses_pairs);
    virtual ~CSteensgaardPA();
 
    // -------------------------------------------------------
@@ -59,28 +59,28 @@ public:
    // -------------------------------------------------------
 
    // Updates pointer analysis with e1 := e2 stmt
-   void ProcessAssignStmt(int e1, int e2);
+   void ProcessAssignStmt(long int e1, long int e2);
 
    // Updates pointer analysis with e1 := &e2 stmt
-   void ProcessAssignAddrStmt(int e1, int e2);
+   void ProcessAssignAddrStmt(long int e1, long int e2);
 
    // Updates pointer analysis with e1 := *e2 stmt
-   void ProcessAssignFromIndStmt(int e1, int e2);
+   void ProcessAssignFromIndStmt(long int e1, long int e2);
 
    // Updates pointer analysis with *x := y stmt
-   void ProcessAssignToIndStmt(int x, int y);
+   void ProcessAssignToIndStmt(long int x, long int y);
 
    // Updates pointer analysis with x := alloc(...) stmt
-   void ProcessAssignAllocStmt(int x);
+   void ProcessAssignAllocStmt(long int x);
 
    // Updates pointer analysis with ret1 .. retm = f(arg1, arg2,
    // ... argn) (i.e., a function call). The a_args and the a_rets are the
    // actual in/out parameters.
-   void ProcessAssignCallStmt(const std::vector<unsigned>& a_rets, int f, const std::vector<unsigned>& a_args);
+   void ProcessAssignCallStmt(const std::vector<unsigned long>& a_rets, long int f, const std::vector<unsigned long>& a_args);
 
-   void ProcessAssignFunPtrAddrStmt(int e1, int e2);
-   // To create a new reference variable. Returns the int to identify the variable.
-   int CreateNewVar(void);
+   void ProcessAssignFunPtrAddrStmt(long int e1, long int e2);
+   // To create a new reference variable. Returns the long int to identify the variable.
+   long int CreateNewVar(void);
 
    /// Prints all points-to-sets using the identifier names as found in \a symbtab
    void PrintAsPointsToSets(const SymTab<SymBase> *symbTab, std::ostream &o=std::cout) const;
@@ -92,33 +92,33 @@ public:
    /// \return A set of variables pointed to by \a id or an empty set
    /// if \a id is not a pointer. The \a id as well as the returned
    /// variables are represented by their globally unique keys.
-   const std::set<unsigned> &GetPointsToVarsSet(unsigned id) const;
+   const std::set<unsigned long> &GetPointsToVarsSet(unsigned long id) const;
 
-   std::set<unsigned> getPtsToFuncsWithPartialPA(unsigned var);
+   std::set<unsigned long> getPtsToFuncsWithPartialPA(unsigned long var);
    // To get the variables pointed to in a set
-   void GetPointsToVars(unsigned int var, std::set<unsigned> * vars_pointed_to) const;
+   void GetPointsToVars(unsigned long int var, std::set<unsigned long> * vars_pointed_to) const;
    // Returns true if there are some variables pointed to by id.
-   bool HasPointsToVars(unsigned id) const;
+   bool HasPointsToVars(unsigned long id) const;
 
-   void GetPointedAtVar(unsigned id, std::set<unsigned> * vars_pointed_at) const;
+   void GetPointedAtVar(unsigned long id, std::set<unsigned long> * vars_pointed_at) const;
    /// \return A set of functions pointed to by \a id or an empty set
    /// if \a id is not a pointer. The \a id as well as the returned
    /// functions are represented by their globally unique keys.
-   const std::set<unsigned> &GetPointsToFuncsSet(unsigned id) const;
+   const std::set<unsigned long> &GetPointsToFuncsSet(unsigned long id) const;
    // To get the functions pointed to in a set
-   void GetPointsToFuncs(unsigned int var, std::set<unsigned> * funcs_pointed_to) const;
+   void GetPointsToFuncs(unsigned long int var, std::set<unsigned long> * funcs_pointed_to) const;
    // Returns true if there are some funcs pointed to by id.
-   bool HasPointsToFuncs(unsigned id) const;  
+   bool HasPointsToFuncs(unsigned long id) const;  
 
    /// \return A set of labels pointed to (not including function
    /// labels) by \a id or an empty set if \a id is not a pointer. The
    /// \a id as well as the returned labels are represented by their
    /// globally unique keys.
-   const std::set<unsigned> &GetPointsToLabelsSet(unsigned id) const;
+   const std::set<unsigned long> &GetPointsToLabelsSet(unsigned long id) const;
    // To get the labels pointed to in a set
-   void GetPointsToLabels(unsigned int var, std::set<unsigned> * labels_pointed_to) const;
+   void GetPointsToLabels(unsigned long int var, std::set<unsigned long> * labels_pointed_to) const;
    // Returns true if there are some labels pointed to by id.
-   bool HasPointsToLabels(unsigned id) const;
+   bool HasPointsToLabels(unsigned long id) const;
 
    /// To get the symbol table used when creating the point-to sets (needed
    /// by CSteensgaardAnalysisBuilder to get the type of a certain key).
@@ -128,7 +128,7 @@ public:
    void BuildVarToFuncsPointToSets();
    void BuildVarToVarsAndVarToLabelsPointToSets();
 
-   void initPASolver(std::set<unsigned> &vars, std::set<FuncSignature *> &funcs);
+   void initPASolver(std::set<unsigned long> &vars, std::set<FuncSignature *> &funcs);
 private:
 
    // Fucntion which does the actual pointer analysis
@@ -136,30 +136,30 @@ private:
 
    // Prints a mapping from variable to a set of entities using the real names eventually
    // found in symbtab
-    void PrintMapToSet(const std::map<unsigned, std::set<unsigned> > &x, std::ostream &o, const SymTab<SymBase> *symbTab=NULL) const;
-    // void PrintMapToSet(const std::map<unsigned, std::set<unsigned> > &x, std::ostream &o) const;
+    void PrintMapToSet(const std::map<unsigned long, std::set<unsigned long> > &x, std::ostream &o, const SymTab<SymBase> *symbTab=NULL) const;
+    // void PrintMapToSet(const std::map<unsigned long, std::set<unsigned long> > &x, std::ostream &o) const;
    // To get the type of the argument variable. Also short cuts
    // any forward reference chain longer than 1.
-   CSteensgaardPAType * gettype(int e);
+   CSteensgaardPAType * gettype(long int e);
 
    // To set the type of the argument variable. Will delete the
    // previous type associated with the variable.
-   void settype(int e, CSteensgaardPAType * t);
+   void settype(long int e, CSteensgaardPAType * t);
 
    // To follow all forward references until we find the variable index
    // going to a ref(x,y), lambda(args)(rets) or bot type. Will also
    // shortcut all forward reference chains longer than 1.
-   int deref(int e);
+   long int deref(long int e);
 
    // Conditional join between two variables point-to sets. If the
    // second one is bot the first one will be inserted into its pending
    // set.
-   void cjoin(int e1, int e2);
+   void cjoin(long int e1, long int e2);
 
    // Unconditional join between two variables point-to sets.
-   void join(int e1, int e2);
+   void join(long int e1, long int e2);
 
-   void joinWithoutUnification(int e1, int e2);
+   void joinWithoutUnification(long int e1, long int e2);
 
 
    // Unconditional unify of two types.
@@ -182,18 +182,18 @@ private:
    // To each variable we have a set of variables pending for this
    // variable to be updated. Both the index variable and the set of
    // pending variables are represented by ints (global keys).
-   std::vector< std::set<unsigned> > _pending_vector;
+   std::vector< std::set<unsigned long> > _pending_vector;
 
-   std::set<unsigned> _vars;
-   std::set<unsigned> _temp_vars;
-   std::set<unsigned> _funcs;
-   std::set<unsigned> _labels;
-   std::set<unsigned> _vars_and_funcs;
-   std::set<unsigned> _vars_labels_and_temp_vars;
-   std::set<unsigned> _vars_labels_temp_vars_and_funcs;
-   std::map< unsigned, std::set< unsigned > > _var_to_vars;
-   std::map< unsigned, std::set< unsigned > > _var_to_labels;
-   std::map< unsigned, std::set< unsigned > > _var_to_funcs;
+   std::set<unsigned long> _vars;
+   std::set<unsigned long> _temp_vars;
+   std::set<unsigned long> _funcs;
+   std::set<unsigned long> _labels;
+   std::set<unsigned long> _vars_and_funcs;
+   std::set<unsigned long> _vars_labels_and_temp_vars;
+   std::set<unsigned long> _vars_labels_temp_vars_and_funcs;
+   std::map< unsigned long, std::set< unsigned long > > _var_to_vars;
+   std::map< unsigned long, std::set< unsigned long > > _var_to_labels;
+   std::map< unsigned long, std::set< unsigned long > > _var_to_funcs;
 };
 
 std::ostream & operator << (std::ostream &o, CSteensgaardPA &r);
@@ -225,7 +225,7 @@ public:
    virtual void Print(std::ostream * o) = 0;
 
 private:
-   void print_var(std::ostream *o, int v);
+   void print_var(std::ostream *o, long int v);
 };
 
 std::ostream & operator << (std::ostream &o, CSteensgaardPAType &t);
@@ -234,23 +234,23 @@ std::ostream & operator << (std::ostream &o, CSteensgaardPAType &t);
 // CSteensgaardPARefType -
 // So called ref type. Is a tuple with two variables. Inherents
 // from parent. We represent bottom vars and funcs by assigning the
-// integer BOT to the argument values.
+// long integer BOT to the argument values.
 // -------------------------------------------------------
 class CSteensgaardPARefType : public CSteensgaardPAType
 {
 public:
-   CSteensgaardPARefType(int var, int func);
+   CSteensgaardPARefType(long int var, long int func);
 
    bool IsRef() {return true;};
 
-   int Var() {return _var;};
-   int Func() {return _func;};
+   long int Var() {return _var;};
+   long int Func() {return _func;};
    CSteensgaardPAType * Copy();
    void Print(std::ostream * o);
 
 private:
-   int _var;
-   int _func;
+   long int _var;
+   long int _func;
 
 }; // end CSteensgaardPARefType
 
@@ -262,11 +262,11 @@ class CSteensgaardPALambdaType : public CSteensgaardPAType
 {
 public:
    // To create the type.
-   CSteensgaardPALambdaType(const std::vector<unsigned>& args, const std::vector<unsigned>& rets);
+   CSteensgaardPALambdaType(const std::vector<unsigned long>& args, const std::vector<unsigned long>& rets);
 
    bool IsLambda() {return true;}
-   const std::vector<unsigned>& Args() {return _args;};
-   const std::vector<unsigned>& Rets() {return _rets;};
+   const std::vector<unsigned long>& Args() {return _args;};
+   const std::vector<unsigned long>& Rets() {return _rets;};
 
    // For copying the type
    CSteensgaardPAType * Copy();
@@ -275,8 +275,8 @@ public:
    void Print(std::ostream * o);
 
 protected:
-   std::vector<unsigned> _args;
-   std::vector<unsigned> _rets;
+   std::vector<unsigned long> _args;
+   std::vector<unsigned long> _rets;
 
 }; // end CSteensgaardPALambdaType
 
@@ -289,15 +289,15 @@ protected:
 class CSteensgaardPAForwType : public CSteensgaardPAType
 {
 public:
-   CSteensgaardPAForwType(int forward_var);
+   CSteensgaardPAForwType(long int forward_var);
    bool IsForw() {return true;}
-   int ForwVar() {return _forward_var;}
-   void SetForwVar(int new_forward_var) {_forward_var = new_forward_var;}
+   long int ForwVar() {return _forward_var;}
+   void SetForwVar(long int new_forward_var) {_forward_var = new_forward_var;}
    CSteensgaardPAType * Copy();
    void Print(std::ostream * o);
 
 protected:
-   int _forward_var;
+   long int _forward_var;
 };
 
 // -------------------------------------------------------

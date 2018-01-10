@@ -14,7 +14,7 @@
 using namespace std;
 using namespace llvm;
 
-typedef std::set<unsigned>::iterator SetIter; 
+typedef std::set<unsigned long>::iterator SetIter; 
 typedef enum {RD,WR,RW} AccessType;
 
 //.first is var represented as declared location, .second is location of access
@@ -31,8 +31,8 @@ class GlobalVarHandler
 {
 private:
   std::set<string> globals;   // Set of all global Vars in a translation unit            
-  std::map<unsigned,string> globalVarMap;
-  std::set<unsigned> globalVarId;
+  std::map<unsigned long,string> globalVarMap;
+  std::set<unsigned long> globalVarId;
   std::string mainFile;
   VarsLoc globalRead;
   VarsLoc globalWrite;
@@ -43,15 +43,15 @@ public:
   GlobalVarHandler(std::string f){mainFile=f;}
   ~GlobalVarHandler(){}
   
-  void insert(unsigned var, string loc);
+  void insert(unsigned long var, string loc);
   
   inline std::string getTUName(){ return mainFile;}
-  std::string getVarAsLoc(unsigned var);
+  std::string getVarAsLoc(unsigned long var);
   inline SetIter gVarsBegin(){return globalVarId.begin();}
   inline SetIter gVarsEnd(){return globalVarId.end();}  
-  inline bool isGv(unsigned p){ return globalVarId.find(p)!=globalVarId.end();}
-  void storeGlobalRead(const std::set<unsigned> &vars, std::string l);
-  void storeGlobalWrite(const std::set<unsigned> &vars, std::string l);
+  inline bool isGv(unsigned long p){ return globalVarId.find(p)!=globalVarId.end();}
+  void storeGlobalRead(const std::set<unsigned long> &vars, std::string l);
+  void storeGlobalWrite(const std::set<unsigned long> &vars, std::string l);
   void storeMapInfo(std::string loc,std::string vCurr, std::string vGlobal,std::string funcLoc);
   inline VarsLoc getGlobalRead() { return globalRead; }
   inline VarsLoc getGlobalWrite() { return globalWrite;}

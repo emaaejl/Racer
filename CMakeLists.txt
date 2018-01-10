@@ -12,6 +12,7 @@ set( LLVM_LINK_COMPONENTS
 #)
 
 add_clang_executable(racer
+  callGraphAnalysis.h	
   eventHandler.h	
   globalVarHandler.h
   globalVarHandler.cpp

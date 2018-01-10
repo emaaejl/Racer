@@ -70,9 +70,9 @@ CSteensgaardPA(auto_ptr <CSteensgaardAnalysisBuilder> builder, CGenericProgram *
 
 void
 CSteensgaardPA::
-initPASolver(std::set<unsigned> &vars, std::set<FuncSignature *> &funcs)
+initPASolver(std::set<unsigned long> &vars, std::set<FuncSignature *> &funcs)
 {
-  unsigned key_size;
+  unsigned long key_size;
   _vars.insert(vars.begin(), vars.end());
   key_size=vars.size()+funcs.size();
   for(auto it=funcs.begin();it!=funcs.end();++it)
@@ -90,25 +90,25 @@ initPASolver(std::set<unsigned> &vars, std::set<FuncSignature *> &funcs)
   _vars_labels_temp_vars_and_funcs.insert(_vars_labels_and_temp_vars.begin(), _vars_labels_and_temp_vars.end());
   _vars_labels_temp_vars_and_funcs.insert(_funcs.begin(), _funcs.end());
 
-  unsigned current_key = key_size; // The lowest unused key
-  unsigned nr_of_extra_bots = _vars_labels_and_temp_vars.size()*2 + _funcs.size();
-  unsigned nr_of_extra_lambdas = _funcs.size();
-  unsigned total_number = current_key + nr_of_extra_bots + nr_of_extra_lambdas;
-  for(unsigned i = 0; i < total_number; i++)
+  unsigned long current_key = key_size; // The lowest unused key
+  unsigned long nr_of_extra_bots = _vars_labels_and_temp_vars.size()*2 + _funcs.size();
+  unsigned long nr_of_extra_lambdas = _funcs.size();
+  unsigned long total_number = current_key + nr_of_extra_bots + nr_of_extra_lambdas;
+  for(unsigned long i = 0; i < total_number; i++)
     _type_vector.push_back(new CSteensgaardPABotType());
 
   _pending_vector.resize(total_number);
 
    // Create mappings v -> ref(i1,i2), i1 -> BOT and i2 -> BOT for
    // each variable, temp variable or label v
-   for(set<unsigned>::iterator v=_vars_labels_and_temp_vars.begin(); v!=_vars_labels_and_temp_vars.end(); ++v) {
+   for(set<unsigned long>::iterator v=_vars_labels_and_temp_vars.begin(); v!=_vars_labels_and_temp_vars.end(); ++v) {
       // Create two new BOT types
       CSteensgaardPABotType * new_b1_t = new CSteensgaardPABotType();
       CSteensgaardPABotType * new_b2_t = new CSteensgaardPABotType();
 
       // Create indexes for them
-      int b1_index = current_key++;
-      int b2_index = current_key++;
+      long int b1_index = current_key++;
+      long int b2_index = current_key++;
 
       // Store them in new index places
       settype(b1_index, new_b1_t);
@@ -125,9 +125,9 @@ initPASolver(std::set<unsigned> &vars, std::set<FuncSignature *> &funcs)
    // each variable v
    for (std::set<FuncSignature *>::iterator funcit=funcs.begin(); funcit!=funcs.end(); ++funcit) {
       // Get the func and its actual parameters and
-     int func_key = (*funcit)->fid;
-     vector<unsigned> f_args = (*funcit)->params;
-     vector<unsigned> f_rets = (*funcit)->rets;
+     long int func_key = (*funcit)->fid;
+     vector<unsigned long> f_args = (*funcit)->params;
+     vector<unsigned long> f_rets = (*funcit)->rets;
 
       // Create a new BOT type
       CSteensgaardPABotType * new_b = new CSteensgaardPABotType();
@@ -136,8 +136,8 @@ initPASolver(std::set<unsigned> &vars, std::set<FuncSignature *> &funcs)
       CSteensgaardPALambdaType * new_l = new CSteensgaardPALambdaType(f_args, f_rets);
 
       // Create indexes for them
-      int b_index = current_key++;
-      int l_index = current_key++;
+      long int b_index = current_key++;
+      long int l_index = current_key++;
 
       // Store them in type vector
       settype(b_index, new_b);
@@ -260,12 +260,12 @@ CSteensgaardPA::
 // Handle stmts of type e1 := e2
 void
 CSteensgaardPA::
-ProcessAssignStmt(int e1, int e2)
+ProcessAssignStmt(long int e1, long int e2)
 {
    // Dereference the variables
    e1 = deref(e1);
    e2 = deref(e2);
-   //std::cout<< "e1="<<e1<<" e2="<<e2<<"\n";
+   //std::cout<< "debug: e1="<<e1<<" e2="<<e2<<"\n";
    // Get the types of the variables
    CSteensgaardPAType * t1 = gettype(e1);
    CSteensgaardPAType * t2 = gettype(e2);
@@ -275,12 +275,11 @@ ProcessAssignStmt(int e1, int e2)
    CSteensgaardPARefType * ref_t2 = static_cast<CSteensgaardPARefType *>(t2);
    assert(ref_t1 && ref_t2);
 
-   // Get the integers representing the vars and the funcs
-   int var1 = deref(ref_t1->Var());
-   int func1 = deref(ref_t1->Func());
-   int var2 = deref(ref_t2->Var());
-   int func2 = deref(ref_t2->Func());
-   //std::cout<< "var1="<<var1<<" var2="<<var2<<"\n";
+   // Get the long integers representing the vars and the funcs
+   long int var1 = deref(ref_t1->Var());
+   long int func1 = deref(ref_t1->Func());
+   long int var2 = deref(ref_t2->Var());
+   long int func2 = deref(ref_t2->Func());
    // Conditionally join them if they are not equal
    if(var1 != var2) {
       cjoin(var1, var2);
@@ -294,7 +293,7 @@ ProcessAssignStmt(int e1, int e2)
 // Handle stmts of type e1 := &e2
 void
 CSteensgaardPA::
-ProcessAssignAddrStmt(int e1, int e2)
+ProcessAssignAddrStmt(long int e1, long int e2)
 {
    // Dereference the e1 and e2 variables
    e1 = deref(e1);
@@ -308,7 +307,7 @@ ProcessAssignAddrStmt(int e1, int e2)
    assert(ref_t1);
    //ref_t1->Print(&std::cout);
    // Get the integer representing the var
-   int var1 = deref(ref_t1->Var());
+   long int var1 = deref(ref_t1->Var());
    //cout<<"e1 ="<<e1<<" e2="<<e2<<"Ref t1 "<<var1<<"\n";
    // Do a join if not equal
    if(var1 != e2) {
@@ -319,7 +318,7 @@ ProcessAssignAddrStmt(int e1, int e2)
 
 void
 CSteensgaardPA::
-ProcessAssignFunPtrAddrStmt(int e1, int e2)
+ProcessAssignFunPtrAddrStmt(long int e1, long int e2)
 {
    // Dereference the e1 and e2 variables
    e1 = deref(e1);
@@ -333,7 +332,7 @@ ProcessAssignFunPtrAddrStmt(int e1, int e2)
    assert(ref_t1);
    //ref_t1->Print(&std::cout);
    // Get the integer representing the var
-   int func1 = deref(ref_t1->Func());
+   long int func1 = deref(ref_t1->Func());
    //cout<<"e1 ="<<e1<<" e2="<<e2<<"Ref t1 "<<func1<<"\n";
    // Do a join if not equal
    if(func1 != e2) {
@@ -346,7 +345,7 @@ ProcessAssignFunPtrAddrStmt(int e1, int e2)
 // Handle stmts of type e1 := *e2
 void
 CSteensgaardPA::
-ProcessAssignFromIndStmt(int e1, int e2)
+ProcessAssignFromIndStmt(long int e1, long int e2)
 {
    // Dereference the variables
    e1 = deref(e1);
@@ -361,10 +360,10 @@ ProcessAssignFromIndStmt(int e1, int e2)
    CSteensgaardPARefType * ref_t2 = static_cast<CSteensgaardPARefType *>(t2);
    assert(ref_t1 && ref_t2);
 
-   // Get the integers representing the vars and the funcs
-   int var1 = deref(ref_t1->Var());
-   int func1 = deref(ref_t1->Func());
-   int var2 = deref(ref_t2->Var());
+   // Get the long integers representing the vars and the funcs
+   long int var1 = deref(ref_t1->Var());
+   long int func1 = deref(ref_t1->Func());
+   long int var2 = deref(ref_t2->Var());
 
    // Check if the second variable is bot
    if(gettype(var2)->IsBot()) {
@@ -377,9 +376,9 @@ ProcessAssignFromIndStmt(int e1, int e2)
       // Downcast the types to a ref type
       CSteensgaardPARefType * ref_t3 = static_cast<CSteensgaardPARefType *>(t3);
 
-      // Get the integers representing the vars and the funcs
-      int var3 = deref(ref_t3->Var());
-      int func3 = deref(ref_t3->Func());
+      // Get the long integers representing the vars and the funcs
+      long int var3 = deref(ref_t3->Var());
+      long int func3 = deref(ref_t3->Func());
 
       // Do conditional join if not equal
       if(var1 != var3) {
@@ -394,7 +393,7 @@ ProcessAssignFromIndStmt(int e1, int e2)
 // Handle stmts of type *x := y
 void
 CSteensgaardPA::
-ProcessAssignToIndStmt(int e1, int e2)
+ProcessAssignToIndStmt(long int e1, long int e2)
 {
    // Dereference the variables
    e1 = deref(e1);
@@ -409,10 +408,10 @@ ProcessAssignToIndStmt(int e1, int e2)
    CSteensgaardPARefType * ref_t2 = static_cast<CSteensgaardPARefType *>(t2);
    assert(ref_t1 && ref_t2);
 
-   // Get the integers representing the vars and the funcs
-   int var1 = deref(ref_t1->Var());
-   int var2 = deref(ref_t2->Var());
-   int func2 = deref(ref_t2->Func());
+   // Get the long integers representing the vars and the funcs
+   long int var1 = deref(ref_t1->Var());
+   long int var2 = deref(ref_t2->Var());
+   long int func2 = deref(ref_t2->Func());
 
    // Check if the first variable is bot
    if(gettype(var1)->IsBot()) {
@@ -425,9 +424,9 @@ ProcessAssignToIndStmt(int e1, int e2)
       CSteensgaardPARefType * ref_t3 = static_cast<CSteensgaardPARefType *>(t3);
       assert(ref_t3);
 
-      // Get the integers representing the vars and the funcs
-      int var3 = deref(ref_t3->Var());
-      int func3 = deref(ref_t3->Func());
+      // Get the long integers representing the vars and the funcs
+      long int var3 = deref(ref_t3->Var());
+      long int func3 = deref(ref_t3->Func());
 
       // Do conditional join if not equal
       if(var3 != var2) {
@@ -443,7 +442,7 @@ ProcessAssignToIndStmt(int e1, int e2)
 // Handle stmts of type x = alloc(...)
 void
 CSteensgaardPA::
-ProcessAssignAllocStmt(int x)
+ProcessAssignAllocStmt(long int x)
 {
    // Dereference the variables
    x = deref(x);
@@ -455,11 +454,11 @@ ProcessAssignAllocStmt(int x)
    CSteensgaardPARefType * ref_t = static_cast<CSteensgaardPARefType *>(t);
    assert(ref_t);
 
-   // Get the integers representing the vars and the funcs
-   int var = deref(ref_t->Var());
+   // Get the long integers representing the vars and the funcs
+   long int var = deref(ref_t->Var());
 
    // Get the current size of the type vector (where to start inserting elements)
-   int t_vector_size = _type_vector.size();
+   long int t_vector_size = _type_vector.size();
 
    if(gettype(var)->IsBot()) {
       // Create two new BOT types
@@ -467,9 +466,9 @@ ProcessAssignAllocStmt(int x)
       CSteensgaardPABotType * new_b2_t = new CSteensgaardPABotType();
 
       // Create indexes for them
-      int b1_index = t_vector_size;
+      long int b1_index = t_vector_size;
       t_vector_size++;
-      int b2_index = t_vector_size;
+      long int b2_index = t_vector_size;
 
       // Store them in new index places
       _type_vector[b1_index] = new_b1_t;
@@ -486,7 +485,7 @@ ProcessAssignAllocStmt(int x)
 // return values) and a number of args (actual argument values).
 void
 CSteensgaardPA::
-ProcessAssignCallStmt(const vector<unsigned> &a_rets, int p, const vector<unsigned> &a_args)
+ProcessAssignCallStmt(const vector<unsigned long> &a_rets, long int p, const vector<unsigned long> &a_args)
 {
    // Get the type of the procedure variable
    p = deref(p);
@@ -497,7 +496,7 @@ ProcessAssignCallStmt(const vector<unsigned> &a_rets, int p, const vector<unsign
    assert(ref_p_t);
 
    // Get the lambda part of the things pointed at
-   int lam = ref_p_t->Func();
+   long int lam = ref_p_t->Func();
    lam = deref(lam);
 
    // Create a lambda expression to be associated with p
@@ -518,19 +517,19 @@ ProcessAssignCallStmt(const vector<unsigned> &a_rets, int p, const vector<unsign
 // Function for creating a new ref. Will create two new bot
 // types. Needed when we have expressions which consists of several
 // expressions itself.
-int
+long int
 CSteensgaardPA::
 CreateNewVar(void)
 {
    // Create two new BOT types and their indexes
    CSteensgaardPABotType * new_b1_t = new CSteensgaardPABotType();
    CSteensgaardPABotType * new_b2_t = new CSteensgaardPABotType();
-   int b1_index = _type_vector.size() + 1;
-   int b2_index = _type_vector.size() + 2;
+   long int b1_index = _type_vector.size() + 1;
+   long int b2_index = _type_vector.size() + 2;
 
    // Create a new ref tuple
    CSteensgaardPARefType * new_ref_t = new CSteensgaardPARefType(b1_index, b2_index);
-   int new_ref_index = _type_vector.size();
+   long int new_ref_index = _type_vector.size();
 
    _vars.insert(new_ref_index);
    // Store it in the vector
@@ -577,7 +576,7 @@ PrintInternals(ostream &o) const
 {
    o << "\n****** Types ******\n";
 
-   int i = 0;
+   long int i = 0;
    for (vector< CSteensgaardPAType * >::const_iterator t=_type_vector.begin(); t!=_type_vector.end(); ++t) {
       o << i << " -> " << *(*t) << endl;
       i++;
@@ -586,9 +585,9 @@ PrintInternals(ostream &o) const
 
    o << "****** Pending ******\n";
    i = 0;
-   for (vector< set < unsigned > > ::const_iterator ps=_pending_vector.begin(); ps!=_pending_vector.end(); ++ps) {
+   for (vector< set < unsigned long > > ::const_iterator ps=_pending_vector.begin(); ps!=_pending_vector.end(); ++ps) {
       o << i << " -> { ";
-      set<unsigned>::const_iterator v;
+      set<unsigned long>::const_iterator v;
       FORALL(v, *ps) {
          o << *v << " ";
       }
@@ -598,37 +597,37 @@ PrintInternals(ostream &o) const
    o << endl;
 }
 
-const set<unsigned> &
+const set<unsigned long> &
 CSteensgaardPA::
-GetPointsToVarsSet(unsigned id) const
+GetPointsToVarsSet(unsigned long id) const
 {
-   map< unsigned, set< unsigned > >::const_iterator pts_it = _var_to_vars.find(id);
+   map< unsigned long, set< unsigned long > >::const_iterator pts_it = _var_to_vars.find(id);
    if (pts_it != _var_to_vars.end()) {
       return pts_it->second;
    } else {
-      static const set<unsigned> empty_set;
+      static const set<unsigned long> empty_set;
       return empty_set;
    }
 }
 
 void
 CSteensgaardPA::
-GetPointsToVars(unsigned id, set<unsigned> * vars_pointed_to) const
+GetPointsToVars(unsigned long id, set<unsigned long> * vars_pointed_to) const
 {
-   map< unsigned, set< unsigned > >::const_iterator pts_it = _var_to_vars.find(id);
+   map< unsigned long, set< unsigned long > >::const_iterator pts_it = _var_to_vars.find(id);
    if (pts_it != _var_to_vars.end()) {
-      for(set< unsigned >::const_iterator v = pts_it->second.begin();
+      for(set< unsigned long >::const_iterator v = pts_it->second.begin();
           v != pts_it->second.end(); ++v) {
             vars_pointed_to->insert(*v);
       }
    }
 }
-void CSteensgaardPA::GetPointedAtVar(unsigned id, std::set<unsigned> * vars_pointed_at) const
+void CSteensgaardPA::GetPointedAtVar(unsigned long id, std::set<unsigned long> * vars_pointed_at) const
 {
-  map< unsigned, set< unsigned > >::const_iterator pts_it = _var_to_vars.begin();
+  map< unsigned long, set< unsigned long > >::const_iterator pts_it = _var_to_vars.begin();
   for(;pts_it!= _var_to_vars.end();pts_it++)
     {
-      set< unsigned >::const_iterator v=pts_it->second.find(id);
+      set< unsigned long >::const_iterator v=pts_it->second.find(id);
       if(v!=pts_it->second.end())
 	vars_pointed_at->insert(pts_it->first);
                
@@ -637,9 +636,9 @@ void CSteensgaardPA::GetPointedAtVar(unsigned id, std::set<unsigned> * vars_poin
 
 bool
 CSteensgaardPA::
-HasPointsToVars(unsigned id) const
+HasPointsToVars(unsigned long id) const
 {
-   map< unsigned, set< unsigned > >::const_iterator pts_it = _var_to_vars.find(id);
+   map< unsigned long, set< unsigned long > >::const_iterator pts_it = _var_to_vars.find(id);
    if (pts_it != _var_to_vars.end()) {
       if(pts_it->second.size() > 0)
          return true;
@@ -651,26 +650,26 @@ HasPointsToVars(unsigned id) const
    }
 }
 
-const set<unsigned> &
+const set<unsigned long> &
 CSteensgaardPA::
-GetPointsToLabelsSet(unsigned id) const
+GetPointsToLabelsSet(unsigned long id) const
 {
-   map< unsigned, set< unsigned > >::const_iterator pts_it = _var_to_labels.find(id);
+   map< unsigned long, set< unsigned long > >::const_iterator pts_it = _var_to_labels.find(id);
    if (pts_it != _var_to_labels.end()) {
       return pts_it->second;
    } else {
-      static const set<unsigned> empty_set;
+      static const set<unsigned long> empty_set;
       return empty_set;
    }
 }
 
 void
 CSteensgaardPA::
-GetPointsToLabels(unsigned id, set<unsigned> * labels_pointed_to) const
+GetPointsToLabels(unsigned long id, set<unsigned long> * labels_pointed_to) const
 {
-   map< unsigned, set< unsigned > >::const_iterator pts_it = _var_to_labels.find(id);
+   map< unsigned long, set< unsigned long > >::const_iterator pts_it = _var_to_labels.find(id);
    if (pts_it != _var_to_labels.end()) {
-      for(set< unsigned >::const_iterator v = pts_it->second.begin();
+      for(set< unsigned long >::const_iterator v = pts_it->second.begin();
           v != pts_it->second.end(); ++v) {
             labels_pointed_to->insert(*v);
       }
@@ -679,9 +678,9 @@ GetPointsToLabels(unsigned id, set<unsigned> * labels_pointed_to) const
 
 bool
 CSteensgaardPA::
-HasPointsToLabels(unsigned id) const
+HasPointsToLabels(unsigned long id) const
 {
-   map< unsigned, set< unsigned > >::const_iterator pts_it = _var_to_labels.find(id);
+   map< unsigned long, set< unsigned long > >::const_iterator pts_it = _var_to_labels.find(id);
    if (pts_it != _var_to_labels.end()) {
       if(pts_it->second.size() > 0)
          return true;
@@ -693,26 +692,26 @@ HasPointsToLabels(unsigned id) const
    }
 }
 
-const std::set<unsigned> &
+const std::set<unsigned long> &
 CSteensgaardPA::
-GetPointsToFuncsSet(unsigned id) const
+GetPointsToFuncsSet(unsigned long id) const
 {
-   map< unsigned, set< unsigned > >::const_iterator pts_it = _var_to_funcs.find(id);
+   map< unsigned long, set< unsigned long > >::const_iterator pts_it = _var_to_funcs.find(id);
    if (pts_it != _var_to_funcs.end()) {
       return pts_it->second;
    } else {
-      static const set<unsigned> empty_set;
+      static const set<unsigned long> empty_set;
       return empty_set;
    }
 }
 
 void
 CSteensgaardPA::
-GetPointsToFuncs(unsigned id, set<unsigned> * funcs_pointed_to) const
+GetPointsToFuncs(unsigned long id, set<unsigned long> * funcs_pointed_to) const
 {
-   map< unsigned, set< unsigned > >::const_iterator pts_it = _var_to_funcs.find(id);
+   map< unsigned long, set< unsigned long > >::const_iterator pts_it = _var_to_funcs.find(id);
    if (pts_it != _var_to_funcs.end()) {
-      for(set< unsigned >::const_iterator v = pts_it->second.begin();
+      for(set< unsigned long >::const_iterator v = pts_it->second.begin();
           v != pts_it->second.end(); ++v) {
             funcs_pointed_to->insert(*v);
       }
@@ -721,9 +720,9 @@ GetPointsToFuncs(unsigned id, set<unsigned> * funcs_pointed_to) const
 
 bool
 CSteensgaardPA::
-HasPointsToFuncs(unsigned id) const
+HasPointsToFuncs(unsigned long id) const
 {
-   map< unsigned, set< unsigned > >::const_iterator pts_it = _var_to_funcs.find(id);
+   map< unsigned long, set< unsigned long > >::const_iterator pts_it = _var_to_funcs.find(id);
    if (pts_it != _var_to_funcs.end()) {
       if(pts_it->second.size() > 0)
          return true;
@@ -740,19 +739,19 @@ CSteensgaardPA::
 BuildVarToVarsAndVarToLabelsPointToSets()
 {
    // Help map holding var to vars and var to labels point to sets
-   std::map< unsigned, std::set< unsigned > > var_to_vars_and_labels;
+   std::map< unsigned long, std::set< unsigned long > > var_to_vars_and_labels;
 
    // A vector mapping from the dereffed var and all
    // variables which goes to the dereffed var through its forward
    // references
-   vector <set < unsigned > > deref_to_refs(_type_vector.size());
+   vector <set < unsigned long > > deref_to_refs(_type_vector.size());
    //std::cout<<"type vector"<<_type_vector.size();
    // Join all variables with the same dereferenced variable in a set.
    // The set is indexed with the dereferenced variable.
-   set<unsigned>::iterator v;
+   set<unsigned long>::iterator v;
    FORALL(v, _vars_labels_and_temp_vars) {
       // Get the corresponding dereferenced variable
-      unsigned d_v = deref(*v);
+      unsigned long d_v = deref(*v);
       if (d_v >= deref_to_refs.size())
          deref_to_refs.resize(d_v+1);
       deref_to_refs[d_v].insert(*v);
@@ -763,16 +762,16 @@ BuildVarToVarsAndVarToLabelsPointToSets()
    // variables they point at
    FORALL(v, _vars) {
       // Get the corresponding dereferenced variable
-      int d_v = deref(*v);
+      long int d_v = deref(*v);
 
       // Get the type of the variable (it must be a ref)
       CSteensgaardPARefType * ref_t = static_cast<CSteensgaardPARefType *>(gettype(d_v));
       assert(ref_t);
 
       // Get the variable in the ref type
-      int ref_v = ref_t->Var();
+      long int ref_v = ref_t->Var();
       // Get the corresponding dereferenced variable
-      int d_ref_v = deref(ref_v);
+      long int d_ref_v = deref(ref_v);
 
       // Get the set of vars pointed at
       // Insert the connection in one of the sets to return
@@ -784,33 +783,33 @@ BuildVarToVarsAndVarToLabelsPointToSets()
 
    // Go through the map and extract the vars and labels pointed to
    // into two separate maps
-   std::map< unsigned, std::set< unsigned > >::iterator v2vl;
+   std::map< unsigned long, std::set< unsigned long > >::iterator v2vl;
    FORALL(v2vl, var_to_vars_and_labels) {
-      unsigned v = (*v2vl).first;
-      std::set< unsigned >::iterator vl;
+      unsigned long v = (*v2vl).first;
+      std::set< unsigned long >::iterator vl;
       FORALL(vl, (*v2vl).second) {
          // Check if the key pointed to is a variable or a label and
          // insert the key in the correct map.
          if(_vars.find(*vl) != _vars.end()) {
             // Create a vars set to the var if no such set existed
             if(_var_to_vars.find(v) == _var_to_vars.end())
-               _var_to_vars[v] = std::set< unsigned >();
+               _var_to_vars[v] = std::set< unsigned long >();
             _var_to_vars[v].insert(*vl);
          }
          else {
             // Create a labels set to the var if no such set existed
             if(_var_to_labels.find(v) == _var_to_labels.end())
-               _var_to_labels[v] = std::set< unsigned >();
+               _var_to_labels[v] = std::set< unsigned long >();
             _var_to_labels[v].insert(*vl);
          }
       }
    }
 }
 
-std::set<unsigned> CSteensgaardPA::getPtsToFuncsWithPartialPA(unsigned var)
+std::set<unsigned long> CSteensgaardPA::getPtsToFuncsWithPartialPA(unsigned long var)
 {
-  set < unsigned >  lambda_refs;
-  int d_v = deref(var);
+  set < unsigned long >  lambda_refs;
+  long int d_v = deref(var);
     
   // Get the type of the variable (it must be a ref)
   CSteensgaardPAType * t = gettype(d_v);
@@ -820,10 +819,10 @@ std::set<unsigned> CSteensgaardPA::getPtsToFuncsWithPartialPA(unsigned var)
   assert(ref_t);
 
     // Get the variable in the ref type
-  unsigned lam = ref_t->Func();
+  unsigned long lam = ref_t->Func();
 
     // Get the corresponding dereferenced variable
-  unsigned d_lam = deref(lam);
+  unsigned long d_lam = deref(lam);
 
   if(!gettype(d_lam)->IsBot())  // function pointer points to function
     {
@@ -831,13 +830,13 @@ std::set<unsigned> CSteensgaardPA::getPtsToFuncsWithPartialPA(unsigned var)
       CSteensgaardPARefType * d_lamref_t = static_cast<CSteensgaardPARefType *>(d_lamt);
       assert(d_lamref_t);
 	 
-      unsigned lam2=d_lamref_t->Func();
-      unsigned lam_pointsto=deref(lam2);
+      unsigned long lam2=d_lamref_t->Func();
+      unsigned long lam_pointsto=deref(lam2);
       if(gettype(lam_pointsto)->IsLambda()) {
 	lambda_refs.insert(d_lam);
-	set<unsigned>::iterator v;
+	set<unsigned long>::iterator v;
 	FORALL(v, _funcs) {
-	  unsigned dv = deref(*v);
+	  unsigned long dv = deref(*v);
 	  if(dv==d_lam && *v!=d_lam) lambda_refs.insert(*v);
 	}  
       }        
@@ -853,15 +852,15 @@ BuildVarToFuncsPointToSets()
    // Create a vector keeping mapping from the dereffed var and all
    // variables which goes to the dereffed var through its forward
    // references
-   map< unsigned, set < unsigned > > lambda_to_refs;
+   map< unsigned long, set < unsigned long > > lambda_to_refs;
 
    // Loop through all program variables to get their pointed to lambda
    // expression (if any) and insert the variable in the lambda
    // expressions set.
-   set<unsigned>::iterator v;
+   set<unsigned long>::iterator v;
    FORALL(v, _vars_and_funcs) {
       // Get the correspondoing dereferenced variable
-      int d_v = deref(*v);
+      long int d_v = deref(*v);
 
       // Get the type of the variable (it must be a ref)
       CSteensgaardPAType * t = gettype(d_v);
@@ -871,10 +870,10 @@ BuildVarToFuncsPointToSets()
       assert(ref_t);
 
       // Get the variable in the ref type
-      int lam = ref_t->Func();
+      long int lam = ref_t->Func();
 
       // Get the corresponding dereferenced variable
-      int d_lam = deref(lam);
+      long int d_lam = deref(lam);
 
       //cout<<"Var "<<*v<<" deref "<<d_v<<" lam "<<lam<<" d_lam "<<d_lam<<"\n";
       // Check if it is a lambda var
@@ -889,9 +888,9 @@ BuildVarToFuncsPointToSets()
 	  CSteensgaardPARefType * d_lamref_t = static_cast<CSteensgaardPARefType *>(d_lamt);
 	  assert(d_lamref_t);
 	 
-	  int lam2=d_lamref_t->Func();
+	  long int lam2=d_lamref_t->Func();
 	 
-	  int lam_pointsto=deref(lam2);
+	  long int lam_pointsto=deref(lam2);
 	 	   // Check if it is a lambda var
 	   if(gettype(lam_pointsto)->IsLambda()) {
          // Yes, insert the var in the lambda expressions set
@@ -904,20 +903,20 @@ BuildVarToFuncsPointToSets()
    // each other. However, we skip the possibility that functions can
    // point to vars or other functions. Also, we skip that function
    // pointer vars can point to themselves.
-   for(unsigned int l=0; l < _type_vector.size(); l++) {
+   for(unsigned long int l=0; l < _type_vector.size(); l++) {
       // Skip all non-lambda vars
       if(gettype(l)->IsLambda()) {
          // Get the set of functions and vars that goes to each other
-         set<unsigned> rs = lambda_to_refs[l];
-         set<unsigned>::iterator r;
+         set<unsigned long> rs = lambda_to_refs[l];
+         set<unsigned long>::iterator r;
          FORALL(r, rs) {
             // Only associate function alias sets to variables, i.e. not to
             // labels, temp variables or to to the functions themselves.
             if((_funcs.find(*r) == _funcs.end()) && (_vars.find(*r) != _vars.end())) {
                // r is a function pointer variable. Create a set from rs
                // holding all functions and variables except r.
-               set<unsigned> rs_not_incl_r;
-               set<unsigned>::iterator t;
+               set<unsigned long> rs_not_incl_r;
+               set<unsigned long>::iterator t;
                FORALL(t, rs) {
                   // Skip inserting t in the set if it equals r (the
                   // current function pointer variable). Also, make sure that
@@ -939,9 +938,9 @@ BuildVarToFuncsPointToSets()
 
 void
 CSteensgaardPA::
-PrintMapToSet(const map<unsigned, set<unsigned> > &x, ostream &o, const SymTab<SymBase> *st) const
+PrintMapToSet(const map<unsigned long, set<unsigned long> > &x, ostream &o, const SymTab<SymBase> *st) const
 {
-   for (map<unsigned, set<unsigned> >::const_iterator it=x.begin(); it!=x.end(); ++it) {
+   for (map<unsigned long, set<unsigned long> >::const_iterator it=x.begin(); it!=x.end(); ++it) {
      if (st){
        if(ValueDecl *val= (st->lookupSymb(it->first))->getVarDecl()) 
 	 o << val->getNameAsString().c_str();
@@ -952,8 +951,8 @@ PrintMapToSet(const map<unsigned, set<unsigned> > &x, ostream &o, const SymTab<S
 	 else
          o << it->first;
       o << " -> { ";
-      const set<unsigned> &vars = it->second;
-      for (set<unsigned>::const_iterator target_it=vars.begin(); target_it!=vars.end(); ++target_it) {
+      const set<unsigned long> &vars = it->second;
+      for (set<unsigned long>::const_iterator target_it=vars.begin(); target_it!=vars.end(); ++target_it) {
         if (st){
 	  ValueDecl *val= (st->lookupSymb(*target_it))->getVarDecl();     
           if(val) o << val->getNameAsString().c_str();
@@ -999,22 +998,25 @@ PrintAsPointsToSets(ostream &o) const
 // Follow all forward references until we find a ref(x,y),
 // lambda(args)(rets) or bot type. Will at the same time also shortcut
 // all forward reference chains longer than 1.
-int
+long int
 CSteensgaardPA::
-deref(int var)
+deref(long int var)
 {
    // most common case: no dereferencing needed
-   CSteensgaardPAType *t = _type_vector[var]; // get the type associated with the variable
-   if (!t->IsForw())
-      return var;
 
-   //std::cout<<"\n!!!Forward Reference!!!"<<var<<" !!!\n";
+   CSteensgaardPAType *t = _type_vector[var]; // get the type associated with the variable
+
+   if (!t->IsForw())
+     return var;
+
    // second most common case: only one dereferencing needed
    CSteensgaardPAForwType *forw_t = static_cast<CSteensgaardPAForwType *>(t);
+ 
    var = forw_t->ForwVar(); // dereference
    t = _type_vector[var];
    if (!t->IsForw())
       return var;
+
    // now run the general handling
    vector<CSteensgaardPAForwType*> shortcuts; // to keep forward references that should be shortcutted
    shortcuts.push_back(forw_t);
@@ -1028,6 +1030,7 @@ deref(int var)
    } while (t->IsForw());
    shortcuts.pop_back(); // the last forward reference does not need to be shortcutted
    // Fix all variable references that should be shortcutted
+
    vector<CSteensgaardPAForwType*>::iterator v;
    FORALL(v, shortcuts) {
       // Reset the old forward reference to a new value
@@ -1039,7 +1042,7 @@ deref(int var)
 // To get the type of a certain variable
 CSteensgaardPAType *
 CSteensgaardPA::
-gettype(int var)
+gettype(long int var)
 {
    // Get the type associated with the variable
    CSteensgaardPAType * t = _type_vector[var];
@@ -1050,7 +1053,7 @@ gettype(int var)
 // previous type assocaited with the variable.
 void
 CSteensgaardPA::
-settype(int e, CSteensgaardPAType * t)
+settype(long int e, CSteensgaardPAType * t)
 {
    // Delete the previous type
    CSteensgaardPAType * org_t = _type_vector[e];
@@ -1066,8 +1069,8 @@ settype(int e, CSteensgaardPAType * t)
    _type_vector[e] = t;
 
    // for x in pending(e) do join(e,x)
-   set<unsigned> ps = _pending_vector[e]; // note: deliberate deep copy
-   set<unsigned>::const_iterator x;
+   set<unsigned long> ps = _pending_vector[e]; // note: deliberate deep copy
+   set<unsigned long>::const_iterator x;
    FORALL(x, ps) {
       join(e, *x);
    }
@@ -1077,7 +1080,7 @@ settype(int e, CSteensgaardPAType * t)
 // is bot the first one will be inserted into its pending set.
 void
 CSteensgaardPA::
-cjoin(int e1, int e2)
+cjoin(long int e1, long int e2)
 {
    if(gettype(e2)->IsBot()) {
      //std::cout<<"Pending\n";
@@ -1091,7 +1094,7 @@ cjoin(int e1, int e2)
 // Unconditional join. Somewhat rewritten compared to code in the paper.
 void
 CSteensgaardPA::
-join(int e1, int e2)
+join(long int e1, long int e2)
 {
    // To get the variables their forward references ending at
    e1 = deref(e1);
@@ -1119,8 +1122,8 @@ join(int e1, int e2)
       CSteensgaardPAForwType * new_e1_t = new CSteensgaardPAForwType(e2);
       settype(e1, new_e1_t);
       // Join all e1's pending items with e2
-      set<unsigned> pv_e1 = _pending_vector[e1]; // note: deliberate deep copy
-      set<unsigned>::const_iterator p;
+      set<unsigned long> pv_e1 = _pending_vector[e1]; // note: deliberate deep copy
+      set<unsigned long>::const_iterator p;
       FORALL(p, pv_e1) {
          join(*p, e2);
       }
@@ -1131,8 +1134,8 @@ join(int e1, int e2)
       CSteensgaardPAForwType * new_e2_t = new CSteensgaardPAForwType(e1);
       settype(e2, new_e2_t);
       // Join all e2's pending items with e1
-      set<unsigned> pv_e2 = _pending_vector[e2]; // note: deliberate deep copy
-      set<unsigned>::const_iterator p;
+      set<unsigned long> pv_e2 = _pending_vector[e2]; // note: deliberate deep copy
+      set<unsigned long>::const_iterator p;
       FORALL(p, pv_e2) {
          join(*p, e1);
       }
@@ -1157,7 +1160,7 @@ join(int e1, int e2)
 // Required for function pointer assignment.If type of both e1 and e2 are not Bot, we shall not unify as join
 void
 CSteensgaardPA::
-joinWithoutUnification(int e1, int e2)
+joinWithoutUnification(long int e1, long int e2)
 {
    // To get the variables their forward references ending at
    e1 = deref(e1);
@@ -1185,8 +1188,8 @@ joinWithoutUnification(int e1, int e2)
       CSteensgaardPAForwType * new_e1_t = new CSteensgaardPAForwType(e2);
       settype(e1, new_e1_t);
       // Join all e1's pending items with e2
-      set<unsigned> pv_e1 = _pending_vector[e1]; // note: deliberate deep copy
-      set<unsigned>::const_iterator p;
+      set<unsigned long> pv_e1 = _pending_vector[e1]; // note: deliberate deep copy
+      set<unsigned long>::const_iterator p;
       FORALL(p, pv_e1) {
          join(*p, e2);
       }
@@ -1197,8 +1200,8 @@ joinWithoutUnification(int e1, int e2)
       CSteensgaardPAForwType * new_e2_t = new CSteensgaardPAForwType(e1);
       settype(e2, new_e2_t);
       // Join all e2's pending items with e1
-      set<unsigned> pv_e2 = _pending_vector[e2]; // note: deliberate deep copy
-      set<unsigned>::const_iterator p;
+      set<unsigned long> pv_e2 = _pending_vector[e2]; // note: deliberate deep copy
+      set<unsigned long>::const_iterator p;
       FORALL(p, pv_e2) {
          join(*p, e1);
       }
@@ -1234,11 +1237,11 @@ unify(CSteensgaardPAType * t1, CSteensgaardPAType * t2)
       CSteensgaardPARefType * ref_t1 = static_cast<CSteensgaardPARefType *>(t1);
       CSteensgaardPARefType * ref_t2 = static_cast<CSteensgaardPARefType *>(t2);
 
-      // Get the integers representing the vars and the funcs
-      int var1 = ref_t1->Var();
-      int func1 = ref_t1->Func();
-      int var2 = ref_t2->Var();
-      int func2 = ref_t2->Func();
+      // Get the long integers representing the vars and the funcs
+      long int var1 = ref_t1->Var();
+      long int func1 = ref_t1->Func();
+      long int var2 = ref_t2->Var();
+      long int func2 = ref_t2->Func();
 
       // Join them if they are not equal
       if(var1 != var2) {
@@ -1253,22 +1256,22 @@ unify(CSteensgaardPAType * t1, CSteensgaardPAType * t2)
       CSteensgaardPALambdaType * ref_t1 = static_cast<CSteensgaardPALambdaType *>(t1);
       CSteensgaardPALambdaType * ref_t2 = static_cast<CSteensgaardPALambdaType *>(t2);
 
-      // Get the integers representing the args and the rets
+      // Get the long integers representing the args and the rets
       // note: deliberate deep copies
-      vector<unsigned> args1 = ref_t1->Args();
-      vector<unsigned> rets1 = ref_t1->Rets();
-      vector<unsigned> args2 = ref_t2->Args();
-      vector<unsigned> rets2 = ref_t2->Rets();
+      vector<unsigned long> args1 = ref_t1->Args();
+      vector<unsigned long> rets1 = ref_t1->Rets();
+      vector<unsigned long> args2 = ref_t2->Args();
+      vector<unsigned long> rets2 = ref_t2->Rets();
 
       // Do the join pairwise on the arguments
-      vector<unsigned>::const_iterator a1;
-      vector<unsigned>::const_iterator a2;
+      vector<unsigned long>::const_iterator a1;
+      vector<unsigned long>::const_iterator a2;
       for(a1 = args1.begin(), a2 = args2.begin(); a1 != args1.end() && a2 != args2.end(); a1++, a2++) {
          join(*a1, *a2);
       }
       // Do the join pairwise on the returns
-      vector<unsigned>::const_iterator r1;
-      vector<unsigned>::const_iterator r2;
+      vector<unsigned long>::const_iterator r1;
+      vector<unsigned long>::const_iterator r2;
       for(r1 = rets1.begin(), r2 = rets2.begin(); r1 != rets1.end() && r2 != rets2.end(); r1++, r2++) {
          join(*r1, *r2);
       }
@@ -1289,11 +1292,11 @@ cunify(CSteensgaardPAType * t1, CSteensgaardPAType * t2)
       CSteensgaardPARefType * ref_t1 = static_cast<CSteensgaardPARefType *>(t1);
       CSteensgaardPARefType * ref_t2 = static_cast<CSteensgaardPARefType *>(t2);
 
-      // Get the integers representing the vars and the funcs
-      int var1 = ref_t1->Var();
-      int func1 = ref_t1->Func();
-      int var2 = ref_t2->Var();
-      int func2 = ref_t2->Func();
+      // Get the long integers representing the vars and the funcs
+      long int var1 = ref_t1->Var();
+      long int func1 = ref_t1->Func();
+      long int var2 = ref_t2->Var();
+      long int func2 = ref_t2->Func();
       // Join them if they are not equal
       if(var1 != var2) {
          cjoin(var1, var2);
@@ -1308,23 +1311,23 @@ cunify(CSteensgaardPAType * t1, CSteensgaardPAType * t2)
       CSteensgaardPALambdaType * ref_t1 = static_cast<CSteensgaardPALambdaType *>(t1);
       CSteensgaardPALambdaType * ref_t2 = static_cast<CSteensgaardPALambdaType *>(t2);
 
-      // Get the integers representing the args and the rets
+      // Get the long integers representing the args and the rets
       // note: deliberate deep copies
-      vector<unsigned> args1 = ref_t1->Args();
-      vector<unsigned> rets1 = ref_t1->Rets();
-      vector<unsigned> args2 = ref_t2->Args();
-      vector<unsigned> rets2 = ref_t2->Rets();
+      vector<unsigned long> args1 = ref_t1->Args();
+      vector<unsigned long> rets1 = ref_t1->Rets();
+      vector<unsigned long> args2 = ref_t2->Args();
+      vector<unsigned long> rets2 = ref_t2->Rets();
 
       // Do the join pairwise on the arguments
-      vector<unsigned>::const_iterator a1;
-      vector<unsigned>::const_iterator a2;
+      vector<unsigned long>::const_iterator a1;
+      vector<unsigned long>::const_iterator a2;
       for(a1 = args1.begin(), a2 = args2.begin(); a1 != args1.end() && a2 != args2.end(); a1++, a2++) {
          cjoin(*a1, *a2);
       }
 
       // Do the join pairwise on the returns
-      vector<unsigned>::const_iterator r1;
-      vector<unsigned>::const_iterator r2;
+      vector<unsigned long>::const_iterator r1;
+      vector<unsigned long>::const_iterator r2;
       for(r1 = rets1.begin(), r2 = rets2.begin(); r1 != rets1.end() && r2 != rets2.end(); r1++, r2++) {
          cjoin(*r1, *r2);
       }
@@ -1347,7 +1350,7 @@ ostream &operator << (ostream &o, const CSteensgaardPA &a)
 // -------------------------------------------------------.
 
 CSteensgaardPARefType::
-CSteensgaardPARefType(int var, int func)
+CSteensgaardPARefType(long int var, long int func)
 {
    _var = var;
    _func = func;
@@ -1373,7 +1376,7 @@ Print(ostream * o)
 // CSteensgaardPALambdaType class
 // -------------------------------------------------------
 CSteensgaardPALambdaType::
-CSteensgaardPALambdaType(const vector<unsigned>& args, const vector<unsigned>& rets)
+CSteensgaardPALambdaType(const vector<unsigned long>& args, const vector<unsigned long>& rets)
 {
    _args = args;
    _rets = rets;
@@ -1393,14 +1396,14 @@ CSteensgaardPALambdaType::
 Print(ostream * o)
 {
    *o << "lambda(";
-   vector<unsigned>::iterator a;
+   vector<unsigned long>::iterator a;
    FORALL(a, _args) {
       *o << *a;
       if((a+1) != _args.end())
          *o << " ";
    }
    *o << ")(";
-   vector<unsigned>::iterator r;
+   vector<unsigned long>::iterator r;
    FORALL(r, _rets) {
       *o << *r;
       if((r+1) != _rets.end())
@@ -1413,7 +1416,7 @@ Print(ostream * o)
 // CSteensgaardPAForwType class
 // -------------------------------------------------------.
 CSteensgaardPAForwType::
-CSteensgaardPAForwType(int forward_var)
+CSteensgaardPAForwType(long int forward_var)
 {
    _forward_var = forward_var;
 }

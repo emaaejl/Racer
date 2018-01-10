@@ -181,14 +181,16 @@ public:
       // pass it to an std::unique_ptr declared after the Compiler variable.
       
       std::unique_ptr<FrontendAction> ScopedToolAction(create());
-   
       // Create the compiler's actual diagnostics engine.
       Compiler->createDiagnostics(DiagConsumer, /*ShouldOwnClient=*/false);
       if (!Compiler->hasDiagnostics())
 	return false;
       Compiler->createSourceManager(*Files);
+
       Compiler->setFrontendAction(ScopedToolAction.get());
+
       const bool Success = Compiler->ExecuteActionCtu(*ScopedToolAction);
+      
       astL->push_back(std::move(Compiler));
       Files->clearStatCaches();
       return Success;
@@ -207,15 +209,55 @@ int main(int argc, const char **argv) {
     if(DebugLevel==O1) debugLabel=1;
     else if(DebugLevel==O2) debugLabel=2;
     else if(DebugLevel==O3) debugLabel=3;
-    if(Test)
-      {
-	LoopPrinter Printer;
-	MatchFinder Finder;
-	//Finder.addMatcher(LoopMatcher, &Printer);
-	Finder.addMatcher(CallExprMatcher, &Printer);
-	Finder.addMatcher(CallExprMatcher1, &Printer);
-	return Tool.run(newFrontendActionFactory(&Finder).get());
-      }  
+    if(Event.c_str()){
+      std::ofstream EventArg(Event.c_str(),std::ios::app);
+      if (EventArg.good())
+	{
+	  /*
+	  llvm::errs()<<"Source Files\n";
+	  std::vector<std::string>::const_iterator is=op.getSourcePathList().begin();
+	   while(is!=op.getSourcePathList().end())
+	    {
+	      llvm::errs()<<"\n File: "<<*is;
+	      is++;
+	    }
+	  std::vector<std::string>::iterator fit= StartFuncsForEvents.begin();
+	  while(fit!=StartFuncsForEvents.end())
+	    {
+	      llvm::errs()<<"\n "<<*fit;
+	      fit++;
+	    }
+	  */
+	  ClangTool ToolCG(op.getCompilations(), op.getSourcePathList());
+	  CallGraph cg;
+	  std::vector<std::unique_ptr<clang::CompilerInstanceCtu> > vectCI;
+	  CGFrontendFactory cgFact(cg,vectCI);
+	  ToolCG.run(&cgFact);
+	  cg.finishGraphConstruction();
+     
+	  llvm::outs()<<"Info: Call Graph construction finished \n";
+	  //llvm::errs()<<"Scanning files for events, stored in"<<Event.c_str()<<"\n";
+	  EventRecorder Printer(EventArg,&cg,StartFuncsForEvents);
+	  MatchFinder Finder;
+	  
+	  //Finder.addMatcher(BindThread, &Printer);
+	  //Finder.addMatcher(BindActivator, &Printer);
+	  //Finder.addMatcher(JoinConfig, &Printer);
+	  Finder.addMatcher(Trigger, &Printer);
+	  Tool.run(newFrontendActionFactory(&Finder).get());
+
+	  llvm::outs()<<"Info: search for events finished \n";
+
+	  /*  for(auto it=vectCI.begin();it!=vectCI.end();it++)
+	    {
+	      FrontendAction *fact=(*it)->getFrontendAction();
+	      if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
+		cgFrontend->EndFrontendAction();
+	      it->get()->EndCompilerActionOnSourceFile();
+	      }*/
+
+	}  
+    }
     if(PAFlow) result = Tool.run(newFrontendActionFactory<PAFlowSensitiveFrontendAction>().get());
     if(Symb) {
       result = Tool.run(newFrontendActionFactory<SymbTabAction>().get());
