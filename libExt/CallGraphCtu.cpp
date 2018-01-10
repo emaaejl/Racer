@@ -70,20 +70,21 @@ public:
   }
 
   void addCalledDecl(Decl *D) {
-    if(!D->hasBody()) return;
-    if (G->includeInGraph(D)) {
+    /*
+      llvm::errs()<<"Caller Node: ";
+      CallerNode->print(llvm::errs());
+    */  
+    if (G->includeInGraph(D) || !D->hasBody()) {
       CallGraphNode *CalleeNode = G->getOrInsertNode(D);
+      /*
+      llvm::errs()<<"Callee Node: ";
+      CalleeNode->print(llvm::errs());
+      */
       CallerNode->addCallee(CalleeNode);
       G->removeRootChild(CalleeNode);
       G->addDeclToExport(CalleeNode);
     }
-
-    //Add this option if required
-    /*  else if(!D->hasBody())
-    {
-      //CallGraphNode *CalleeNode = G->getOrInsertNode(D);
-      G->includeCGNodesCtu(D,CallerNode);
-      }*/
+    //llvm::errs()<<"\n";
   }
 
   void VisitCallExpr(CallExpr *CE) {

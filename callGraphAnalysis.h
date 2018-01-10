@@ -67,7 +67,7 @@ public:
 	    if(visited.find(*it)==visited.end())
 	      cgQ.push(*it);
 	    parentOf.insert(std::make_pair(nameOfNode(*it), std::make_pair(nameOfNode(currNode),edgeL)));
-	  }  
+	  }
       }
     return NULL;
   }
@@ -76,6 +76,7 @@ public:
     // At present it assumes that 
   bool hasReachablePath(std::string from, std::string to)
   {
+    if(from==to) return true;  // base case
     std::pair <std::multimap<std::string, std::pair<std::string, bool> >::iterator, std::multimap<std::string,std::pair<std::string, bool> >::iterator > range;
     std::vector<std::string> cgV;
     cgV.push_back(to);
@@ -106,15 +107,11 @@ public:
       {  
 	parentOf.clear();
 	CallGraphNode *startNode;
-	llvm::errs()<<"CG 1\n";
 	startNode=getCallGraphNode(cg->getRoot(),*it,0);
 	if(!startNode) {it++; continue;}
-	llvm::errs()<<"CG 2\n";
-	if(getCallGraphNode(startNode, to, 1)){
-	  llvm::errs()<<"CG 3\n";
-	  if(hasReachablePath(*it, to))
-	    return *it;
-	}
+	if(getCallGraphNode(startNode, to, 1))
+	  //if(hasReachablePath(*it, to))
+	  return *it;
 	it++;
       }
     return "not_found";

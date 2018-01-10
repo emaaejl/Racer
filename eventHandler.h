@@ -17,7 +17,7 @@ class EventRecorder : public MatchFinder::MatchCallback {
   std::ofstream & EventFile;
   CGReachability cgR;
  public :
- EventRecorder(std::ofstream & o, CallGraph *cg,std::vector<std::string> startFuncsEvents):EventFile(o),cgR(cg,startFuncsEvents){llvm::errs()<<"constructor\n";}
+ EventRecorder(std::ofstream & o, CallGraph *cg,std::vector<std::string> startFuncsEvents):EventFile(o),cgR(cg,startFuncsEvents){}
 
   const clang::Expr* IgnoreOtherCastParenExpr(const clang::Expr *E)
   {
@@ -88,18 +88,13 @@ class EventRecorder : public MatchFinder::MatchCallback {
     if (const CallExpr *call= Result.Nodes.getNodeAs<clang::CallExpr>("bTrigger"))
 	if(const FunctionDecl *caller= Result.Nodes.getNodeAs<clang::FunctionDecl>("TrigCaller")) {
 
-	  llvm::errs()<<"1\n";
 	  std::string callerName=caller->getNameInfo().getAsString();
-	  llvm::errs()<<"2\n";
 	  std::string from=cgR.reachableFrom(callerName);
-	  llvm::errs()<<"3\n";
 	  std::string sName;
 	  if(from=="not_found") sName=callerName; 
 	  else sName=from; 
 	  EventFile<<"triggerEvent(\""<<sName<<"\",";
-	  llvm::errs()<<"4\n";
 	  recordCallArguments(call);
-	  llvm::errs()<<"5\n";
      }
     
   }
