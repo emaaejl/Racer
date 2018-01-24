@@ -41,7 +41,7 @@ add_clang_executable(racer
 #)
 
 target_link_libraries(racer
-  clangAST
+  LINK_PRIVATE clangAST
   clangBasic
   clangDriver
   clangFrontend
