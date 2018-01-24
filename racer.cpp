@@ -20,6 +20,8 @@
 #include "commandOptions.h"
 #include "eventHandler.h"
 #include <memory>
+#include <ctime>
+
 using namespace clang::driver;
 using namespace clang::tooling;
 using namespace llvm;
@@ -228,6 +230,10 @@ int main(int argc, const char **argv) {
 	      fit++;
 	    }
 	  */
+	  
+	  
+	  std::clock_t c_start = std::clock();
+
 	  ClangTool ToolCG(op.getCompilations(), op.getSourcePathList());
 	  CallGraph cg;
 	  std::vector<std::unique_ptr<clang::CompilerInstanceCtu> > vectCI;
@@ -235,7 +241,13 @@ int main(int argc, const char **argv) {
 	  ToolCG.run(&cgFact);
 	  cg.finishGraphConstruction();
      
-	  llvm::outs()<<"Info: Call Graph construction finished \n";
+	  std::clock_t c_end = std::clock();
+
+	  llvm::outs()<<"***Call Graph construction completes in: "<<(c_end-c_start)/CLOCKS_PER_SEC<<" ms\n";
+
+	  ToolCG.getFiles().PrintStats();
+
+	  c_end = std::clock();
 	  //llvm::errs()<<"Scanning files for events, stored in"<<Event.c_str()<<"\n";
 	  EventRecorder Printer(EventArg,&cg,StartFuncsForEvents);
 	  MatchFinder Finder;
@@ -246,9 +258,11 @@ int main(int argc, const char **argv) {
 	  Finder.addMatcher(Trigger, &Printer);
 	  Tool.run(newFrontendActionFactory(&Finder).get());
 
-	  llvm::outs()<<"Info: search for events finished \n";
+	  c_end = std::clock();
 
-	  /*  for(auto it=vectCI.begin();it!=vectCI.end();it++)
+	  llvm::outs()<<"***Search for events completed in: "<<(c_end-c_start)/CLOCKS_PER_SEC<<" ms\n";
+
+	  /*for(auto it=vectCI.begin();it!=vectCI.end();it++)
 	    {
 	      FrontendAction *fact=(*it)->getFrontendAction();
 	      if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 

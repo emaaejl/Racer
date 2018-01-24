@@ -31,7 +31,7 @@ private:
   SymTabBuilderVisitor *visitorSymTab;
 public:
   explicit CGConsumer(CompilerInstance *CI,CallGraph &g,std::string file) : CG(g), visitorPA(new SteengaardPAVisitor(CI,0,file)),visitorSymTab(new SymTabBuilderVisitor(CI,0))
-  {}
+    {}
 
   virtual void HandleTranslationUnit(ASTContext &Context) {     
     //Perform pointer analysis first on this translation unit
@@ -40,9 +40,11 @@ public:
     
     visitorPA->initPA(visitorSymTab->getSymTab());	 
     visitorPA->TraverseDecl(Context.getTranslationUnitDecl());
+    visitorPA->showStatistics();
     TranslationUnitDecl *tu=Context.getTranslationUnitDecl();
     CG.setPA(visitorPA); 
     CG.addToCallGraph(tu);
+    //Context.getSourceManager().getFileManager().PrintStats();
   }    
 };
 

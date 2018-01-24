@@ -40,10 +40,11 @@ private:
   // varAccInfo: Location of Access, Var Id, Read/Write, FunctionLocation
   std::multimap<clang::SourceLocation,std::tuple<unsigned long,AccessType,std::string> > varAccInfo; 
   int debugLabel;
+  long LineCount;
 public:
   explicit SteengaardPAVisitor(CompilerInstance *CI, int dl,std::string file) 
     : astContext(&(CI->getASTContext())), gv(file), isVisitingFunc(false), debugLabel(dl) // initialize private members
-    {}
+  {LineCount=0;}
 
   void initPA(SymTab<SymBase> *symbTab);
   inline void importSymTab(SymTab<SymBase> *symbTab) { _symbTab=symbTab;}  
@@ -65,7 +66,12 @@ public:
   void updatePABasedOnExpr(unsigned long id, Expr * exp);
   bool traverse_subExpr(Expr * exp);
   bool VisitVarDecl(VarDecl *vDecl);
- 
+  void showStatistics(){
+    llvm::outs()<<"Total number of lines of code: "<<LineCount<<"\n";
+    std::ofstream EventFile("/repo/emasabu/tools/mhp/STATISTICS",std::ios::app);
+    EventFile<<LineCount<<"\n";
+    
+  } 
 };
 
 #endif

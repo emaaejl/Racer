@@ -336,6 +336,7 @@ void SteengaardPAVisitor::updatePAonUnaryExpr(clang::UnaryOperator *uop)
 
  bool SteengaardPAVisitor::VisitStmt(Stmt *st) 
  {
+   LineCount++;
    if (clang::BinaryOperator *bop=dyn_cast<clang::BinaryOperator>(st))
      updatePAonBinaryExpr(bop); 
    else if (clang::UnaryOperator *uop=dyn_cast<clang::UnaryOperator>(st))
