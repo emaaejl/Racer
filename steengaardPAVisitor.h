@@ -60,7 +60,7 @@ public:
   void updatePAonUnaryExpr(clang::UnaryOperator *uop);
   void updatePAonBinaryExpr(clang::BinaryOperator *bop);
   bool VisitStmt(Stmt *st);
-  std::set<FunctionDecl *> getCallsFromFuncPtr(CallExpr *call);
+  std::set<FunctionDecl *> getCallsFromFuncPtr(clang::CallExpr *call);
   void updatePAOnFuncCall(FunctionDecl *calleeDecl,std::set<Expr*> ActualInArgs,long ActualOutArg);
   void updatePAOnCallExpr(CallExpr *call,long ActOutArg);
   void updatePABasedOnExpr(unsigned long id, Expr * exp);

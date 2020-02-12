@@ -58,7 +58,7 @@ bool SymTabBuilderVisitor::VisitFunctionDecl(FunctionDecl *func)
 bool SymTabBuilderVisitor::VisitVarDecl(VarDecl *vdecl)
 {
   if(!vdecl->isLocalVarDecl() && !vdecl->hasLinkage()) {return true;}
-  if(!astContext->getSourceManager().isInSystemHeader(vdecl->getLocStart()))
+  if(!astContext->getSourceManager().isInSystemHeader(vdecl->getPointOfInstantiation()))
     { 
       if(clang::ValueDecl *val=dyn_cast<clang::ValueDecl>(vdecl)) {
 	std::string fname;

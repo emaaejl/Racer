@@ -93,7 +93,7 @@ bool CompilerInstanceCtu::ExecuteActionCtu(clang::FrontendAction &Act) {
   StringRef StatsFile = getFrontendOpts().StatsFile;
   if (!StatsFile.empty()) {
     std::error_code EC;
-    auto StatS = llvm::make_unique<llvm::raw_fd_ostream>(StatsFile, EC,
+    auto StatS = make_unique<llvm::raw_fd_ostream>(StatsFile, EC,
                                                          llvm::sys::fs::F_Text);
     if (EC) {
       getDiagnostics().Report(diag::warn_fe_unable_to_open_stats_file)

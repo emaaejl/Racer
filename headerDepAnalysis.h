@@ -249,7 +249,8 @@ public:
                                      const clang::FileEntry *File,
                                      clang::StringRef,
                                      clang::StringRef,
-                                     const clang::Module *) {
+                                     const clang::Module *,
+                                     clang::SrcMgr::CharacteristicKind) {
       
       const char *path = realpath (_sm.getBufferName(HashLoc).str().c_str(), NULL); 
       if(_sm.isInSystemHeader(HashLoc)) 
@@ -296,7 +297,7 @@ void HeaderAnalysisAction::ExecuteAction() {
     //PPCallbacks *ppc = new PPCallbacks (sm, _inc);
     clang::Preprocessor &pp (ci.getPreprocessor ());
     
-    std::unique_ptr<PPCallbacksExtend> ppc=llvm::make_unique<PPCallbacksExtend>(sm,_inc);
+    std::unique_ptr<PPCallbacksExtend> ppc=make_unique<PPCallbacksExtend>(sm,_inc);
     pp.addPPCallbacks (std::move(ppc));
     //pp.addPPCallbacks (ppc);
     clang::Token token;
@@ -316,7 +317,9 @@ public:
     IncAnalFrontendActionFactory (RepoGraph &inc)
     : _inc (inc) { }
 
-    virtual clang::FrontendAction *create () {
-        return new HeaderAnalysisAction(_inc);
+    virtual std::unique_ptr<clang::FrontendAction> create () {
+        HeaderAnalysisAction* ptr = new HeaderAnalysisAction(_inc);
+        std::unique_ptr<HeaderAnalysisAction> u_ptr(ptr);
+        return u_ptr;
     }
 };

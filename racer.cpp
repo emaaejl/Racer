@@ -128,7 +128,7 @@ class PAFrontendAction : public ASTFrontendAction {
  public:
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
     std::cout<<"Pointer Analysis of "<<file.str()<<"\n";
-    return llvm::make_unique<PointerAnalysis>(&CI,file.str()); // pass CI pointer to ASTConsumer
+    return make_unique<PointerAnalysis>(&CI,file.str()); // pass CI pointer to ASTConsumer
    }
 };
 
@@ -136,7 +136,7 @@ class PAFlowSensitiveFrontendAction : public ASTFrontendAction {
  public:
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
     std::cout<<"Pointer Analysis (Flow Sensitive) of "<<file.str()<<"\n";
-    return llvm::make_unique<FSPointerAnalysis>(&CI,file.str()); // pass CI pointer to ASTConsumer
+    return make_unique<FSPointerAnalysis>(&CI,file.str()); // pass CI pointer to ASTConsumer
    }
 };
 
@@ -145,14 +145,14 @@ class RacerFrontendAction : public ASTFrontendAction {
  public:
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
      if(debugLabel>1) llvm::outs()<<"Analyzing File: "<<file.str()<<"\n";
-     return llvm::make_unique<RaceDetector>(&CI,file.str()); // pass CI pointer to ASTConsumer
+     return make_unique<RaceDetector>(&CI,file.str()); // pass CI pointer to ASTConsumer
    }
 };
 
 class SymbTabAction : public ASTFrontendAction {
  public:
     virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)    {
-      return llvm::make_unique<SymTabBuilder>(&CI,debugLabel);
+      return make_unique<SymTabBuilder>(&CI,debugLabel);
      }
 };
 
@@ -165,8 +165,10 @@ public:
   CGFrontendFactory (CallGraph &cg, std::vector<std::unique_ptr<clang::CompilerInstanceCtu>> &ast)
     : _cg (cg) { astL=&ast;}
 
-    virtual clang::FrontendAction *create () {
-      return new CGFrontendAction(_cg);
+    virtual std::unique_ptr<clang::FrontendAction> create () {
+      CGFrontendAction* ptr = new CGFrontendAction(_cg);
+      std::unique_ptr<CGFrontendAction> u_ptr(ptr);
+      return u_ptr;
     }
 
     bool runInvocation(
@@ -174,7 +176,7 @@ public:
     std::shared_ptr<PCHContainerOperations> PCHContainerOps,
     DiagnosticConsumer *DiagConsumer) {
       // Create a compiler instance to handle the actual work.
-      std::unique_ptr<clang::CompilerInstanceCtu> Compiler=llvm::make_unique<clang::CompilerInstanceCtu>   (std::move(PCHContainerOps));
+      std::unique_ptr<clang::CompilerInstanceCtu> Compiler=make_unique<clang::CompilerInstanceCtu>   (std::move(PCHContainerOps));
       Compiler->setInvocation(std::move(Invocation));
       Compiler->setFileManager(Files);
 
@@ -194,7 +196,7 @@ public:
       const bool Success = Compiler->ExecuteActionCtu(*ScopedToolAction);
       
       astL->push_back(std::move(Compiler));
-      Files->clearStatCaches();
+      Files->clearStatCache();
       return Success;
     }
 };

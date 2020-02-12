@@ -181,7 +181,7 @@ CallGraphNode *CallGraphCtu::getOrInsertNode(Decl *F) {
   if (Node)
     return Node.get();
 
-  Node = llvm::make_unique<CallGraphNode>(F);
+  Node = make_unique<CallGraphNode>(F);
   // Make Root node a parent of all functions to make sure all are reachable.
   if (F)
     Root->addCallee(Node.get());

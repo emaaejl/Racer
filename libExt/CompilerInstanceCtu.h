@@ -44,7 +44,7 @@
 
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/FileManager.h"
-#include "clang/Basic/MemoryBufferCache.h"
+#include "clang/Serialization/InMemoryModuleCache.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/Version.h"
@@ -78,7 +78,7 @@ class ExternalASTSource;
 class FileEntry;
 class FileManager;
 class FrontendAction;
-class MemoryBufferCache;
+class InMemoryModuleCache;
 class Module;
 class Preprocessor;
 class Sema;
@@ -93,7 +93,7 @@ class CompilerInstanceCtu : public CompilerInstance {
   bool shouldEraseOutputFile;
 public:
   CompilerInstanceCtu(std::shared_ptr<PCHContainerOperations> PCHContainerOps =
-			       std::make_shared<PCHContainerOperations>(), MemoryBufferCache *SharedPCMCache = nullptr): CompilerInstance(PCHContainerOps, SharedPCMCache)
+			       std::make_shared<PCHContainerOperations>(), InMemoryModuleCache *SharedPCMCache = nullptr): CompilerInstance(PCHContainerOps, SharedPCMCache)
   {}
 ~CompilerInstanceCtu(){
 }
@@ -177,7 +177,11 @@ public:
     if(cf)
     if (cf->BeginSourceFile(*this, FIF)) {
       setFrontendFileStatus();
-      cf->Execute();   
+      auto exec_result = cf->Execute();
+      if(!exec_result)
+      {
+        /* What to do if execution somehow fails? */
+      }
       cf->EndSourceFileCtu();
     }
   }
@@ -211,7 +215,7 @@ public:
   StringRef StatsFile = getFrontendOpts().StatsFile;
   if (!StatsFile.empty()) {
     std::error_code EC;
-    auto StatS = llvm::make_unique<llvm::raw_fd_ostream>(StatsFile, EC,
+    auto StatS = make_unique<llvm::raw_fd_ostream>(StatsFile, EC,
                                                          llvm::sys::fs::F_Text);
     if (EC) {
       getDiagnostics().Report(diag::warn_fe_unable_to_open_stats_file)

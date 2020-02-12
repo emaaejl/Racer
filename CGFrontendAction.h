@@ -57,7 +57,7 @@ class CGFrontendAction : public ASTFrontendAction {
   
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
     //llvm::errs()<<"Building Call Graph of "<<file.str()<<"\n"; 
-    return llvm::make_unique<CGConsumer>(&CI,_cg,file.str());
+    return make_unique<CGConsumer>(&CI,_cg,file.str());
   }
 
 ~CGFrontendAction(){
