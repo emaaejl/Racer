@@ -384,12 +384,12 @@ bool SteengaardPAVisitor::VisitStmt(Stmt *st) {
 std::set<clang::FunctionDecl *>
 SteengaardPAVisitor::getCallsFromFuncPtr(CallExpr *call) {
   auto children = call->getRawSubExprs();
-  llvm::ArrayRef<Stmt *>::iterator stmt_it = children.begin();
+  llvm::ArrayRef<Stmt *>::iterator I = children.begin();
   std::set<FunctionDecl *> funcCalls;
-  Stmt *S = *stmt_it;
-  if (auto *S_as_expr = dyn_cast<Expr>(S))
+  Stmt *S = *I;
+  if (auto *S_asExpr = dyn_cast<Expr>(S))
   {
-    S = S_as_expr->IgnoreImplicit();
+    S = S_asExpr->IgnoreImplicit();
   }
   if (clang::DeclRefExpr *ref = clang::dyn_cast_or_null<clang::DeclRefExpr>(S)) {
     if (clang::ValueDecl *vdec = dyn_cast<clang::ValueDecl>(ref->getDecl())) {
