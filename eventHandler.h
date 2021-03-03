@@ -64,7 +64,7 @@ class EventRecorder : public MatchFinder::MatchCallback {
     EventFile<<std::endl;
   }
 
-  void run(const MatchFinder::MatchResult &Result) override {
+  virtual void run(const MatchFinder::MatchResult &Result) {
     if (const CallExpr *call= Result.Nodes.getNodeAs<clang::CallExpr>("bThread")) 
       //if(const FunctionDecl *caller= Result.Nodes.getNodeAs<clang::FunctionDecl>("ThreadCaller"))
 	{

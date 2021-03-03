@@ -37,7 +37,7 @@ public:
   explicit SymTabBuilder(CompilerInstance *CI, int dl)
     : visitor(new SymTabBuilderVisitor(CI,dl)) // initialize the visitor
     {}
- void HandleTranslationUnit(ASTContext &Context) override {
+ virtual void HandleTranslationUnit(ASTContext &Context) {
     visitor->TraverseDecl(Context.getTranslationUnitDecl());
     visitor->dumpSymTab();
   }   

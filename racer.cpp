@@ -42,7 +42,7 @@ public:
   }
 
   // override this to call our ExampleVisitor on the entire source file
-  void HandleTranslationUnit(ASTContext &Context) override {
+  virtual void HandleTranslationUnit(ASTContext &Context) {
     
     visitorSymTab->TraverseDecl(Context.getTranslationUnitDecl());
     visitorSymTab->dumpSymTab();
@@ -70,7 +70,7 @@ public:
   {
   }
 
-  bool HandleTopLevelDecl(clang::DeclGroupRef DG) override {
+  virtual bool HandleTopLevelDecl(clang::DeclGroupRef DG) {
     errs()<<"first line\n";
     if (!DG.isSingleDecl()) {
       return true;
@@ -109,7 +109,7 @@ public:
       }
 
     // override this to call our ExampleVisitor on the entire source file
-  void HandleTranslationUnit(ASTContext &Context) override {
+  virtual void HandleTranslationUnit(ASTContext &Context) {
     visitorSymTab->TraverseDecl(Context.getTranslationUnitDecl());
     visitorSymTab->dumpSymTab();
     
@@ -126,7 +126,7 @@ public:
 
 class PAFrontendAction : public ASTFrontendAction {
  public:
-  std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file) override   {
+  virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
     std::cout<<"Pointer Analysis of "<<file.str()<<"\n";
     return make_unique<PointerAnalysis>(&CI,file.str()); // pass CI pointer to ASTConsumer
    }
@@ -134,7 +134,7 @@ class PAFrontendAction : public ASTFrontendAction {
 
 class PAFlowSensitiveFrontendAction : public ASTFrontendAction {
  public:
-  std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file) override   {
+  virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
     std::cout<<"Pointer Analysis (Flow Sensitive) of "<<file.str()<<"\n";
     return make_unique<FSPointerAnalysis>(&CI,file.str()); // pass CI pointer to ASTConsumer
    }
@@ -143,7 +143,7 @@ class PAFlowSensitiveFrontendAction : public ASTFrontendAction {
 
 class RacerFrontendAction : public ASTFrontendAction {
  public:
-  std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file) override   {
+  virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
      if(debugLabel>1) llvm::outs()<<"Analyzing File: "<<file.str()<<"\n";
      return make_unique<RaceDetector>(&CI,file.str()); // pass CI pointer to ASTConsumer
    }
@@ -151,7 +151,7 @@ class RacerFrontendAction : public ASTFrontendAction {
 
 class SymbTabAction : public ASTFrontendAction {
  public:
-    std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file) override    {
+    virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)    {
       return make_unique<SymTabBuilder>(&CI,debugLabel);
      }
 };
@@ -165,7 +165,7 @@ public:
   CGFrontendFactory (CallGraph &cg, std::vector<std::unique_ptr<clang::CompilerInstanceCtu>> &ast)
     : _cg (cg) { astL=&ast;}
 
-    std::unique_ptr<clang::FrontendAction> create () override {
+    virtual std::unique_ptr<clang::FrontendAction> create () {
       CGFrontendAction* ptr = new CGFrontendAction(_cg);
       std::unique_ptr<CGFrontendAction> u_ptr(ptr);
       return u_ptr;
@@ -174,7 +174,7 @@ public:
     bool runInvocation(
     std::shared_ptr<CompilerInvocation> Invocation, FileManager *Files,
     std::shared_ptr<PCHContainerOperations> PCHContainerOps,
-    DiagnosticConsumer *DiagConsumer) override {
+    DiagnosticConsumer *DiagConsumer) {
       // Create a compiler instance to handle the actual work.
       std::unique_ptr<clang::CompilerInstanceCtu> Compiler=make_unique<clang::CompilerInstanceCtu>   (std::move(PCHContainerOps));
       Compiler->setInvocation(std::move(Invocation));

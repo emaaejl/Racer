@@ -83,11 +83,11 @@ public:
  SymVarCxtClang(): SymBase(){_var=NULL; _subtype=UNDEF;}
  SymVarCxtClang(clang::ValueDecl *var, PtrType ptr,std::string func):SymBase()
     { _var=var; _subtype=ptr; scope=func;}
-  inline IdentType getType() override {return VAR;}
-  inline clang::ValueDecl * getVarDecl() const override {return _var;}
-  inline clang::FunctionDecl *getFuncDecl() const override {return NULL;}
-  inline FuncSignature *getFuncSig() const override {return NULL;}
-  void dump() override;
+inline IdentType getType(){return VAR;}
+inline clang::ValueDecl * getVarDecl() const {return _var;}
+inline clang::FunctionDecl *getFuncDecl() const {return NULL;}
+inline FuncSignature *getFuncSig() const {return NULL;}
+ void dump();
 private:
   clang::ValueDecl * _var;
   PtrType _subtype;
@@ -100,11 +100,11 @@ public:
  SymExprCxtClang(): SymBase(){ _exp=NULL;}
  SymExprCxtClang(clang::Expr *exp): SymBase(){_exp=exp;}
  SymExprCxtClang(unsigned long id, clang::Expr *exp): SymBase(id){_exp=exp;}
- inline void dump() override{ errs()<<"Expr Not Dump"; errs()<<"\t EXPR \t No\n";} 
- inline IdentType getType() override{return EXPR;}
- inline clang::ValueDecl * getVarDecl() const override {return NULL;}
- inline clang::FunctionDecl *getFuncDecl() const override {return NULL;}
- inline FuncSignature *getFuncSig() const override {return NULL;}
+ inline void dump(){ errs()<<"Expr Not Dump"; errs()<<"\t EXPR \t No\n";} 
+ inline IdentType getType(){return EXPR;}
+ inline virtual clang::ValueDecl * getVarDecl() const {return NULL;}
+ inline clang::FunctionDecl *getFuncDecl() const {return NULL;}
+ inline FuncSignature *getFuncSig() const {return NULL;}
 private:
  clang::Expr * _exp;
 };
@@ -114,15 +114,15 @@ class SymFuncRetCxtClang: public SymBase
 {
 public:
  SymFuncRetCxtClang(std::string func): SymBase(){scope=func;}
-  inline void dump() override
+  inline void dump()
   { 
     errs()<<" \t\tRet "<< "("<< scope <<")"; 
     errs()<<"\t\t TEMPVAR \t No"<<"\n";
   } 
-  inline IdentType getType() override{return RET;}
-  clang::ValueDecl * getVarDecl() const override {return NULL;}
-  inline clang::FunctionDecl *getFuncDecl() const override {return NULL;}
-  inline FuncSignature *getFuncSig() const override {return NULL;}
+  inline IdentType getType(){return RET;}
+  virtual clang::ValueDecl * getVarDecl() const {return NULL;}
+  inline clang::FunctionDecl *getFuncDecl() const {return NULL;}
+  inline FuncSignature *getFuncSig() const {return NULL;}
 private:
   std::string scope;
 };
@@ -141,13 +141,13 @@ public:
       _arg=val; _subtype=ptr;_funid=fid;scope=func; isVarArg=false;
     }
    
- inline void dump() override
+ inline void dump()
   { 
     errs()<<"\t\t"<<_arg->getNameAsString()<< " ("<< scope <<")"; 
     errs()<<"\t\t FuncArgVar \t "<<ptrTypeToStr(_subtype)<<"\n";
   } 
-  inline IdentType getType() override{return ARGVAR;}
-  inline clang::ValueDecl * getVarDecl() const override {
+  inline IdentType getType(){return ARGVAR;}
+  inline virtual clang::ValueDecl * getVarDecl() const {
     return _arg;
   }
   inline virtual clang::ParmVarDecl * getParmDecl() const 
@@ -156,8 +156,8 @@ public:
 	return (clang::ParmVarDecl *)_arg;
       return NULL;
     }
-  inline clang::FunctionDecl *getFuncDecl() const override {return NULL;}
-  inline FuncSignature *getFuncSig() const override {return NULL;}
+  inline clang::FunctionDecl *getFuncDecl() const {return NULL;}
+  inline FuncSignature *getFuncSig() const {return NULL;}
 private:
   clang::ValueDecl * _arg;
   unsigned long _funid;
@@ -171,18 +171,18 @@ class SymFuncDeclCxtClang: public SymBase
 public:
  SymFuncDeclCxtClang(): SymBase(){ _func=NULL;}
  SymFuncDeclCxtClang(clang::FunctionDecl *fun): SymBase(){_func=fun;}
-  ~SymFuncDeclCxtClang() override{delete _fsig;}
+  ~SymFuncDeclCxtClang(){delete _fsig;}
  inline void insertArg(SymArgVarCxtClang *arg){_params.push_back(arg);} 
  inline void insertRet(SymFuncRetCxtClang *ret){_rets.push_back(ret);} 
- inline void dump() override
+ inline void dump()
  { 
    errs()<<"\t\t"<<_func->getNameInfo().getAsString(); errs()<<"\t\t FUNC DECL \t X\n";
  }
- inline IdentType getType() override{return FUNCDECL;}
- inline clang::ValueDecl * getVarDecl() const override {return NULL;}
- inline clang::FunctionDecl *getFuncDecl() const override {return _func;}
- inline FuncSignature *getFuncSig() const override {return _fsig;}
- FuncSignature *buildSign() override;
+ inline IdentType getType(){return FUNCDECL;}
+ inline virtual clang::ValueDecl * getVarDecl() const {return NULL;}
+ inline clang::FunctionDecl *getFuncDecl() const {return _func;}
+ inline FuncSignature *getFuncSig() const {return _fsig;}
+ FuncSignature *buildSign();
  void haveSignature(){_fsig=buildSign();}
 private:
   clang::FunctionDecl * _func;
