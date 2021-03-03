@@ -241,7 +241,7 @@ public:
         {}
 
     // InclusionDirective
-    virtual void InclusionDirective (clang::SourceLocation HashLoc,
+    void InclusionDirective (clang::SourceLocation HashLoc,
                                      const clang::Token &,
                                      clang::StringRef,
                                      bool IsAngled,
@@ -250,7 +250,7 @@ public:
                                      clang::StringRef,
                                      clang::StringRef,
                                      const clang::Module *,
-                                     clang::SrcMgr::CharacteristicKind) {
+                                     clang::SrcMgr::CharacteristicKind) override {
       
       const char *path = realpath (_sm.getBufferName(HashLoc).str().c_str(), NULL); 
       if(_sm.isInSystemHeader(HashLoc)) 
@@ -317,7 +317,7 @@ public:
     IncAnalFrontendActionFactory (RepoGraph &inc)
     : _inc (inc) { }
 
-    virtual std::unique_ptr<clang::FrontendAction> create () {
+    std::unique_ptr<clang::FrontendAction> create () override {
         HeaderAnalysisAction* ptr = new HeaderAnalysisAction(_inc);
         std::unique_ptr<HeaderAnalysisAction> u_ptr(ptr);
         return u_ptr;

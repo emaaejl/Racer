@@ -241,12 +241,12 @@ class CSteensgaardPARefType : public CSteensgaardPAType
 public:
    CSteensgaardPARefType(long int var, long int func);
 
-   bool IsRef() {return true;};
+   bool IsRef() override {return true;};
 
    long int Var() {return _var;};
    long int Func() {return _func;};
-   CSteensgaardPAType * Copy();
-   void Print(std::ostream * o);
+   CSteensgaardPAType * Copy() override;
+   void Print(std::ostream * o) override;
 
 private:
    long int _var;
@@ -264,15 +264,15 @@ public:
    // To create the type.
    CSteensgaardPALambdaType(const std::vector<unsigned long>& args, const std::vector<unsigned long>& rets);
 
-   bool IsLambda() {return true;}
+   bool IsLambda() override {return true;}
    const std::vector<unsigned long>& Args() {return _args;};
    const std::vector<unsigned long>& Rets() {return _rets;};
 
    // For copying the type
-   CSteensgaardPAType * Copy();
+   CSteensgaardPAType * Copy() override;
 
    // To print the type
-   void Print(std::ostream * o);
+   void Print(std::ostream * o) override;
 
 protected:
    std::vector<unsigned long> _args;
@@ -290,11 +290,11 @@ class CSteensgaardPAForwType : public CSteensgaardPAType
 {
 public:
    CSteensgaardPAForwType(long int forward_var);
-   bool IsForw() {return true;}
+   bool IsForw() override {return true;}
    long int ForwVar() {return _forward_var;}
    void SetForwVar(long int new_forward_var) {_forward_var = new_forward_var;}
-   CSteensgaardPAType * Copy();
-   void Print(std::ostream * o);
+   CSteensgaardPAType * Copy() override;
+   void Print(std::ostream * o) override;
 
 protected:
    long int _forward_var;
@@ -307,9 +307,9 @@ protected:
 class CSteensgaardPABotType : public CSteensgaardPAType
 {
 public:
-   bool IsBot() {return true;}
-   CSteensgaardPAType * Copy();
-   void Print(std::ostream * o);
+   bool IsBot() override {return true;}
+   CSteensgaardPAType * Copy() override;
+   void Print(std::ostream * o) override;
 };
 
 #endif

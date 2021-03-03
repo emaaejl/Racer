@@ -42,6 +42,8 @@
 #include <utility>
 #include "../CGFrontendAction.h"
 
+#include "llvm/Support/Host.h"
+
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Serialization/InMemoryModuleCache.h"
@@ -95,7 +97,7 @@ public:
   CompilerInstanceCtu(std::shared_ptr<PCHContainerOperations> PCHContainerOps =
 			       std::make_shared<PCHContainerOperations>(), InMemoryModuleCache *SharedPCMCache = nullptr): CompilerInstance(PCHContainerOps, SharedPCMCache)
   {}
-~CompilerInstanceCtu(){
+~CompilerInstanceCtu() override{
 }
 
   void setFrontendAction(FrontendAction *Val)
@@ -242,7 +244,7 @@ void EndCompilerActionOnSourceFile() {
   if (DisableFree) {
     resetAndLeakSema();
     resetAndLeakASTContext();
-    BuryPointer(takeASTConsumer().get());
+    llvm::BuryPointer(takeASTConsumer().get());
   } else {
     setSema(nullptr);
     setASTContext(nullptr);

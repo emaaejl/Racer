@@ -33,7 +33,7 @@ public:
   explicit CGConsumer(CompilerInstance *CI,CallGraph &g,std::string file) : CG(g), visitorPA(new SteengaardPAVisitor(CI,0,file)),visitorSymTab(new SymTabBuilderVisitor(CI,0))
     {}
 
-  virtual void HandleTranslationUnit(ASTContext &Context) {     
+  void HandleTranslationUnit(ASTContext &Context) override {     
     //Perform pointer analysis first on this translation unit
     visitorSymTab->TraverseDecl(Context.getTranslationUnitDecl());
     //visitorSymTab->dumpSymTab();
@@ -55,15 +55,15 @@ class CGFrontendAction : public ASTFrontendAction {
  CGFrontendAction(CallGraph &cg)
    : _cg (cg) {}
   
-  virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file)   {
+  std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file) override   {
     //llvm::errs()<<"Building Call Graph of "<<file.str()<<"\n"; 
     return make_unique<CGConsumer>(&CI,_cg,file.str());
   }
 
-~CGFrontendAction(){
+~CGFrontendAction() override{
 }
 
-void EndSourceFileAction() {}  
+void EndSourceFileAction() override {}  
 void EndSourceFileCtu() { }
 
 void EndActionOnSourceFile() {}  
