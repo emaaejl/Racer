@@ -42,6 +42,8 @@
 #include <utility>
 #include "../CGFrontendAction.h"
 
+#include "llvm/Support/Host.h"
+
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Serialization/InMemoryModuleCache.h"
