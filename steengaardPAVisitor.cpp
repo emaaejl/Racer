@@ -496,7 +496,7 @@ bool SteengaardPAVisitor::traverse_subExpr(Expr *exp) {
 // Store Global Variable Information
 bool SteengaardPAVisitor::VisitVarDecl(VarDecl *vDecl) {
   if (!astContext->getSourceManager().isInSystemHeader(
-          vDecl->getPointOfInstantiation())) {
+          vDecl->getLocation())) {
     if (clang::ValueDecl *val = dyn_cast<clang::ValueDecl>(vDecl)) {
       Expr *exp = const_cast<clang::Expr *>(vDecl->getAnyInitializer());
       unsigned long key = _symbTab->lookupId(val);
