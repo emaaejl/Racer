@@ -249,7 +249,7 @@ int main(int argc, const char **argv) {
 
 	  ToolCG.getFiles().PrintStats();
 
-	  c_end = std::clock();
+	  c_start = std::clock();
 	  //llvm::errs()<<"Scanning files for events, stored in"<<Event.c_str()<<"\n";
 	  EventRecorder Printer(EventArg,&cg,StartFuncsForEvents);
 	  MatchFinder Finder;

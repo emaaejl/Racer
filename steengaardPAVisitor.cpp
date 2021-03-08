@@ -445,8 +445,13 @@ void SteengaardPAVisitor::updatePAOnCallExpr(CallExpr *call, long ActOutArg) {
   else if(!astContext->getSourceManager().isInSystemHeader(callee->getSourceRange().getBegin()))
     updatePAOnFuncCall(callee, ActualInArgs, ActOutArg);
   else
+  {
     //Assume it's a library function, and don't continue further
+    llvm::errs() << "Following function is a sink for pointer analysis.\n";
+    callee->dump();
+
     return;
+  }
 }
 
 void SteengaardPAVisitor::updatePABasedOnExpr(unsigned long id, Expr *exp) {
