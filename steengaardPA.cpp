@@ -310,7 +310,9 @@ ProcessAssignAddrStmt(long int e1, long int e2)
    //ref_t1->Print(&std::cout);
    // Get the integer representing the var
    long int var1 = deref(ref_t1->Var());
+   #ifdef DEBUG
    cout<<"e1 ="<<e1<<" e2="<<e2<<"Ref t1 "<<var1<<"\n";
+   #endif
    // Do a join if not equal
    if(var1 != e2) {
      // std::cout<<"addr join\n";
@@ -335,7 +337,9 @@ ProcessAssignFunPtrAddrStmt(long int e1, long int e2)
    //ref_t1->Print(&std::cout);
    // Get the integer representing the var
    long int func1 = deref(ref_t1->Func());
+   #ifdef DEBUG
    cout<<"e1 ="<<e1<<" e2="<<e2<<"Ref t1 "<<func1<<"\n";
+   #endif
    // Do a join if not equal
    if(func1 != e2) {
      // std::cout<<"addr join\n";
