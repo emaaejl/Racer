@@ -4,6 +4,7 @@
 /****************************************************************/
 
 #include "steengaardPAVisitor.h"
+#include "clang/Lex/Lexer.h"
 using namespace clang;
 
 void SteengaardPAVisitor::initPA(SymTab<SymBase> *symbTab) {
@@ -440,11 +441,24 @@ void SteengaardPAVisitor::updatePAOnCallExpr(CallExpr *call, long ActOutArg) {
     std::set<FunctionDecl *>::iterator I = fCalls.begin(), E = fCalls.end();
     for (; I != E; I++)
       updatePAOnFuncCall(*I, ActualInArgs, ActOutArg);
-  } else
+  } 
+  else if(!astContext->getSourceManager().isInSystemHeader(callee->getSourceRange().getBegin()))
     updatePAOnFuncCall(callee, ActualInArgs, ActOutArg);
+  else
+    //Assume it's a library function, and don't continue further
+    return;
 }
 
 void SteengaardPAVisitor::updatePABasedOnExpr(unsigned long id, Expr *exp) {
+#ifdef DEBUG
+  exp->dump();
+  SourceManager& SM = astContext->getSourceManager();
+  exp->getExprStmt()->getSourceRange().dump(SM);
+  const SourceRange range = exp->getExprStmt()->getSourceRange();
+  llvm::StringRef ref = Lexer::getSourceText(CharSourceRange::getCharRange(range), 
+    astContext->getSourceManager(), LangOptions());
+  llvm::errs() << __FILE__ << ":" << __LINE__<< " --- EXPRESSION PRINT: ¤"  << ref << "¤\n";
+#endif
   std::pair<unsigned long, PtrType> expTypePair = getExprIdandType(exp);
   if (expTypePair.second == PTRONE || expTypePair.second == PTRZERO) {
     pa->ProcessAssignStmt(id, expTypePair.first);

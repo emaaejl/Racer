@@ -263,9 +263,11 @@ CSteensgaardPA::
 ProcessAssignStmt(long int e1, long int e2)
 {
    // Dereference the variables
+   #ifdef DEBUG
+   std::cout << __FILE__ << ":" << __LINE__ << " " << "debug: e1="<<e1<<" e2="<<e2<<"\n";
+   #endif
    e1 = deref(e1);
    e2 = deref(e2);
-   //std::cout<< "debug: e1="<<e1<<" e2="<<e2<<"\n";
    // Get the types of the variables
    CSteensgaardPAType * t1 = gettype(e1);
    CSteensgaardPAType * t2 = gettype(e2);
@@ -308,7 +310,7 @@ ProcessAssignAddrStmt(long int e1, long int e2)
    //ref_t1->Print(&std::cout);
    // Get the integer representing the var
    long int var1 = deref(ref_t1->Var());
-   //cout<<"e1 ="<<e1<<" e2="<<e2<<"Ref t1 "<<var1<<"\n";
+   cout<<"e1 ="<<e1<<" e2="<<e2<<"Ref t1 "<<var1<<"\n";
    // Do a join if not equal
    if(var1 != e2) {
      // std::cout<<"addr join\n";
@@ -333,7 +335,7 @@ ProcessAssignFunPtrAddrStmt(long int e1, long int e2)
    //ref_t1->Print(&std::cout);
    // Get the integer representing the var
    long int func1 = deref(ref_t1->Func());
-   //cout<<"e1 ="<<e1<<" e2="<<e2<<"Ref t1 "<<func1<<"\n";
+   cout<<"e1 ="<<e1<<" e2="<<e2<<"Ref t1 "<<func1<<"\n";
    // Do a join if not equal
    if(func1 != e2) {
      // std::cout<<"addr join\n";
@@ -875,11 +877,11 @@ BuildVarToFuncsPointToSets()
       // Get the corresponding dereferenced variable
       long int d_lam = deref(lam);
 
-      //cout<<"Var "<<*v<<" deref "<<d_v<<" lam "<<lam<<" d_lam "<<d_lam<<"\n";
+      cout<<"Var "<<*v<<" deref "<<d_v<<" lam "<<lam<<" d_lam "<<d_lam<<"\n";
       // Check if it is a lambda var
       if(gettype(d_lam)->IsLambda()) {   //direct function
          // Yes, insert the var in the lambda expressions set
-	//cout<<*v<<" points to "<<d_lam<<"\n";
+	cout<<*v<<" points to "<<d_lam<<"\n";
          lambda_to_refs[d_lam].insert(*v);
       }
       else if(!gettype(d_lam)->IsBot())  // function pointer points to function
@@ -924,7 +926,7 @@ BuildVarToFuncsPointToSets()
                   if((*t != *r) && (_funcs.find(*t) != _funcs.end()))
 		    {
                      rs_not_incl_r.insert(*t);
-		     //cout<<*r<<" points to "<<*t<<"\n";
+		     cout<<*r<<" points to "<<*t<<"\n";
 		    }
                }
                _var_to_funcs[*r] = rs_not_incl_r;
@@ -1004,8 +1006,13 @@ deref(long int var)
 {
    // most common case: no dereferencing needed
 
-   CSteensgaardPAType *t = _type_vector[var]; // get the type associated with the variable
+   if(var < 0)
+      return var;
 
+   CSteensgaardPAType *t = _type_vector[var]; // get the type associated with the variable
+   #ifdef DEBUG
+   cout << __FILE__ << ":" << __LINE__ << " " << "Debug: " << var << "\n";   
+   #endif
    if (!t->IsForw())
      return var;
 
