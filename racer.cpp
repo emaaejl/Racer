@@ -299,18 +299,18 @@ int main(int argc, const char **argv) {
       cg.finishGraphConstruction();
       cg.viewGraph();
       for(auto it=vectCI.begin();it!=vectCI.end();it++)
-	{
-	  FrontendAction *fact=(*it)->getFrontendAction();
-	  if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
-	    cgFrontend->EndFrontendAction();
-	  it->get()->EndCompilerActionOnSourceFile();
-	}
+	    {
+	      FrontendAction *fact=(*it)->getFrontendAction();
+	      if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
+	        cgFrontend->EndFrontendAction();
+	      it->get()->EndCompilerActionOnSourceFile();
+	    }
     }
     if(RA){
       if(op.getSourcePathList().size()!=2) 
       {
-	errs()<<"Command Format Error, exactly two sources are required to run the command. See, e.g. racer --help\n";
-	return 0;	  
+	      errs()<<"Command Format Error, exactly two sources are required to run the command. See, e.g. racer --help\n";
+	      return 0;	  
       }
 
       // header Analysis
@@ -343,7 +343,7 @@ int main(int argc, const char **argv) {
       cg.finishGraphConstruction();
       llvm::errs()<<"CG construction finished\n";
       if(debugLabel>2)
-	cg.viewGraph();      
+	      cg.viewGraph();      
 
       // Race Detection
       /*  std::vector< std::string > sop=op.getSourcePathList();
@@ -360,19 +360,17 @@ int main(int argc, const char **argv) {
       racer->setCallGraph(&cg);
       std::ofstream Method1(FUNC1.c_str()), Method2(FUNC2.c_str());
       if (Method1.good() && Method2.good()) 
-	racer->setTaskStartPoint(FUNC1.c_str(),FUNC2.c_str());
+	      racer->setTaskStartPoint(FUNC1.c_str(),FUNC2.c_str());
       racer->extractPossibleRaces();
       
       // Finish compiler instances
       for(auto it=vectCI.begin();it!=vectCI.end();it++)
-	{
-	  FrontendAction *fact=(*it)->getFrontendAction();
-	  if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
-	    cgFrontend->EndFrontendAction();
-	  it->get()->EndCompilerActionOnSourceFile();
-	}
-      
+	    {
+	      FrontendAction *fact=(*it)->getFrontendAction();
+	      if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
+	        cgFrontend->EndFrontendAction();
+	      it->get()->EndCompilerActionOnSourceFile();
+	    }      
     }
-
-   return result;
+  return result;
 }
