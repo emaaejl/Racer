@@ -297,6 +297,8 @@ int main(int argc, const char **argv) {
       CGFrontendFactory cgFact(cg,vectCI);
       result=Tool.run(&cgFact);
       cg.finishGraphConstruction();
+      if(debugLabel > 2)
+        cg.print(llvm::errs());
       cg.viewGraph();
       for(auto it=vectCI.begin();it!=vectCI.end();it++)
 	    {
