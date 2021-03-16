@@ -1,7 +1,0 @@
-[
-	{
-		"directory": "/home/jmm01/llvm-repo/clang/tools/Racer/test/data",
-		"command": "/usr/bin/gcc -I/home/jmm01/llvm-repo/clang/tools/Racer/test/data/include fizzbuzz.c",
-		"file": "/home/jmm01/llvm-repo/clang/tools/Racer/test/data/fizzbuzz.c"
-	}
-]
