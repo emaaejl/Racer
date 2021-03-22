@@ -269,11 +269,13 @@ int main(int argc, const char **argv) {
       std::vector<std::unique_ptr<clang::CompilerInstanceCtu> > vectCI;
       TimerWrapper cg_timer = TimerWrapper("Call Graph Generation");
       CGFrontendFactory cgFact(cg,vectCI);
+
       cg_timer.startTimers();
       result=Tool.run(&cgFact);
       cg.finishGraphConstruction();
       cg_timer.stopTimers();
       cg_timer.printInfo(std::cout);
+      
       cg.viewGraph();
       for(auto it=vectCI.begin();it!=vectCI.end();it++)
       {
