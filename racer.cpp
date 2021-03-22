@@ -28,12 +28,12 @@ using namespace clang::driver;
 using namespace clang::tooling;
 using namespace llvm;
 
-//#define WITH_TIME_SAMPLING
+#define WITH_TIME_SAMPLING
 
 RaceFinder *racer=new RaceFinder();
 int debugLabel=0;
 #ifdef WITH_TIME_SAMPLING
-TimerWrapper CTU_action("CallGraph CTU Invocation", 1000);
+TimerWrapper CTU_action("CallGraph CTU Invocation", 3000);
 #endif
 class PointerAnalysis : public ASTConsumer {
 private:
@@ -313,7 +313,7 @@ int main(int argc, const char **argv) {
       std::vector<std::unique_ptr<clang::CompilerInstanceCtu> > vectCI;
       CGFrontendFactory cgFact(cg,vectCI);
 #ifdef WITH_TIME_SAMPLING
-      TimerWrapper cg_timer = TimerWrapper("Call Graph Generation");
+      TimerWrapper cg_timer = TimerWrapper("Call Graph Generation", 8);
       int currRealMem, currVirtMem;
       int peakRealMem, peakVirtMem;
       cg_timer.startTimers();
@@ -325,9 +325,10 @@ int main(int argc, const char **argv) {
       cg_timer.printInfo(std::cout);
       CTU_action.printInfo(std::cout);
       getMemory(&currRealMem, &peakRealMem, &currVirtMem, &peakVirtMem);
-      std::cout << "Peak RAM (kb): " << peakRealMem << " Peak Virtual Memory (kb)" << peakVirtMem << "\n";
+      std::cout << "Peak RAM (kb): " << peakRealMem << " Peak Virtual Memory (kb) " << peakVirtMem << "\n";
 #endif
-      cg.viewGraph();
+      if(debugLabel > 1)
+        cg.viewGraph();
       for(auto it=vectCI.begin();it!=vectCI.end();it++)
       {
         FrontendAction *fact=(*it)->getFrontendAction();
