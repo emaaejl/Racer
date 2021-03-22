@@ -1,7 +1,7 @@
+#!/usr/bin/python3
 import json
 import os
 import sys
-import subprocess
 #Require racer path to be defined
 PATH_TO_RACER=os.environ["RACER_PATH"]
 def compile_command_to_racer_script(compile_command_path, racer_runnerscript_outpath = ""):
@@ -12,6 +12,10 @@ def compile_command_to_racer_script(compile_command_path, racer_runnerscript_out
         comp_commands = json.load(data)
         #Extract the files built
         comp_command_files = list(map(lambda e: f'"{e["file"]}"', comp_commands))
+
+        #Filter out non-C files (Racer is not compatible with C++)
+        comp_command_files = list(filter(lambda e: e.endswith(".c\""), comp_command_files))
+
         filesToCheck = " \\\n".join([f for f in comp_command_files])
     if(not filesToCheck):
         exit("No files found in compilation database. Exiting ...")
