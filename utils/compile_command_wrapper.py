@@ -20,15 +20,20 @@ def compile_command_to_racer_script(compile_command_path, racer_runnerscript_out
         #Run racer with timing
         outfile.write(f"/usr/bin/time -v {PATH_TO_RACER} --cg -p={compile_command_path} \\\n")
         outfile.write(f"{filesToCheck}\n")
-
+    with open(os.path.splitext(racer_runnerscript_outpath)[0] + "_metrics.sh", "w") as metrics_out:
         #Run counting tool for LoC count, if such a tool exists
         if ( "LOC_COUNTER_PATH" in os.environ):      
             CODELINE_COUNTER = os.environ["LOC_COUNTER_PATH"]  
-            outfile.write(f"\n{CODELINE_COUNTER} \\\n")
-            outfile.write(f"{filesToCheck}\n")
+            metrics_out.write(f"\n{CODELINE_COUNTER} \\\n")
+            metrics_out.write(f"{filesToCheck}\n")
         else:
             print("Note: LoC counter runner not generated.\nTo do so, set environment variable 'LOC_COUNTER_PATH' to preferred tool.")
-        
+        if("COMPLEXITY_TOOL" in os.environ):
+            COMPLEXITY_TOOL = os.environ["COMPLEXITY_TOOL"]
+            metrics_out.write(f"\n{COMPLEXITY_TOOL} \\\n")
+            metrics_out.write(f"{filesToCheck}\n")
+        else:
+            print("Note: complexity metrics runner not generated.\nTo do so, set environment variable 'COMPLEXITY_TOOL' to preferred tool.")
     return racer_runnerscript_outpath
 
 if __name__ == "__main__":
