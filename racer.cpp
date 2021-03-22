@@ -28,10 +28,13 @@ using namespace clang::driver;
 using namespace clang::tooling;
 using namespace llvm;
 
+//#define WITH_TIME_SAMPLING
 
 RaceFinder *racer=new RaceFinder();
 int debugLabel=0;
-
+#ifdef WITH_TIME_SAMPLING
+TimerWrapper CTU_action("CallGraph CTU Invocation", 1000);
+#endif
 class PointerAnalysis : public ASTConsumer {
 private:
   SteengaardPAVisitor *visitorPA; 
@@ -194,16 +197,57 @@ public:
       Compiler->createSourceManager(*Files);
 
       Compiler->setFrontendAction(ScopedToolAction.get());
-
+#ifdef WITH_TIME_SAMPLING
+      CTU_action.startTimers();
+#endif
       const bool Success = Compiler->ExecuteActionCtu(*ScopedToolAction);
-      
+#ifdef WITH_TIME_SAMPLING
+      CTU_action.stopTimers();
+#endif
       astL->push_back(std::move(Compiler));
       Files->clearStatCache();
       return Success;
     }
 };
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+#ifdef WITH_TIME_SAMPLING
+/*
+ * https://stackoverflow.com/questions/1558402/memory-usage-of-current-process-in-c
+ * Measures the current (and peak) resident and virtual memories
+ * usage of your linux C process, in kB
+ */
+void getMemory(
+    int* currRealMem, int* peakRealMem,
+    int* currVirtMem, int* peakVirtMem) {
 
+    // stores each word in status file
+    char buffer[1024] = "";
+
+    // linux file contains this-process info
+    FILE* file = fopen("/proc/self/status", "r");
+
+    // read the entire file
+    while (fscanf(file, " %1023s", buffer) == 1) {
+
+        if (strcmp(buffer, "VmRSS:") == 0) {
+            fscanf(file, " %d", currRealMem);
+        }
+        if (strcmp(buffer, "VmHWM:") == 0) {
+            fscanf(file, " %d", peakRealMem);
+        }
+        if (strcmp(buffer, "VmSize:") == 0) {
+            fscanf(file, " %d", currVirtMem);
+        }
+        if (strcmp(buffer, "VmPeak:") == 0) {
+            fscanf(file, " %d", peakVirtMem);
+        }
+    }
+    fclose(file);
+}
+#endif
 int main(int argc, const char **argv) {
     // parse the command-line args passed to your code 
     CommonOptionsParser op(argc, argv, RacerOptCat);        
@@ -267,15 +311,22 @@ int main(int argc, const char **argv) {
     if(CG){
       CallGraph cg;
       std::vector<std::unique_ptr<clang::CompilerInstanceCtu> > vectCI;
-      TimerWrapper cg_timer = TimerWrapper("Call Graph Generation");
       CGFrontendFactory cgFact(cg,vectCI);
-
+#ifdef WITH_TIME_SAMPLING
+      TimerWrapper cg_timer = TimerWrapper("Call Graph Generation");
+      int currRealMem, currVirtMem;
+      int peakRealMem, peakVirtMem;
       cg_timer.startTimers();
+#endif
       result=Tool.run(&cgFact);
       cg.finishGraphConstruction();
+#ifdef WITH_TIME_SAMPLING
       cg_timer.stopTimers();
       cg_timer.printInfo(std::cout);
-      
+      CTU_action.printInfo(std::cout);
+      getMemory(&currRealMem, &peakRealMem, &currVirtMem, &peakVirtMem);
+      std::cout << "Peak RAM (kb): " << peakRealMem << " Peak Virtual Memory (kb)" << peakVirtMem << "\n";
+#endif
       cg.viewGraph();
       for(auto it=vectCI.begin();it!=vectCI.end();it++)
       {
