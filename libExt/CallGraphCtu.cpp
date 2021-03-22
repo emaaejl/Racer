@@ -54,7 +54,7 @@ public:
     if(PA){
       std::set<FunctionDecl *> FDSet=PA->getCallsFromFuncPtr(CE);
       for(std::set<FunctionDecl *>::iterator it=FDSet.begin();it!=FDSet.end();it++)  
-	    DSet.insert(*it);
+	DSet.insert(*it);
     }  
     else
       llvm::errs()<<"PA not found\n";
@@ -73,18 +73,16 @@ public:
     /*
       llvm::errs()<<"Caller Node: ";
       CallerNode->print(llvm::errs());
-    */
+    */  
     if (G->includeInGraph(D) || !D->hasBody()) {
       CallGraphNode *CalleeNode = G->getOrInsertNode(D);
       /*
-      llvm::errs()<<" Callee Node: ";
+      llvm::errs()<<"Callee Node: ";
       CalleeNode->print(llvm::errs());
       */
       CallerNode->addCallee(CalleeNode);
       G->removeRootChild(CalleeNode);
-      //G->addDeclToExport(CalleeNode);
-
-      G->includeCGNodesCtu(D, CallerNode);
+      G->addDeclToExport(CalleeNode);
     }
     //llvm::errs()<<"\n";
   }
@@ -134,6 +132,9 @@ void CallGraphCtu::addNodesForBlocks(DeclContext *D) {
 
 CallGraphCtu::CallGraphCtu() {
   Root = getOrInsertNode(nullptr);
+  std::string str=uniqueNameResolve(nullptr);
+  FunctionNameMap[str]=Root;
+  FunctionMap[nullptr]=Root;
 }
 
 CallGraphCtu::~CallGraphCtu() {}
@@ -169,75 +170,89 @@ void CallGraphCtu::addNodeForDecl(Decl* D, bool IsGlobal) {
     builder.Visit(Body);
 }
 
-CallGraphNode *CallGraphCtu::getNode(const Decl *F) const {
-  FunctionMapTy::const_iterator I = FunctionMap.find(F);
-  if (I == FunctionMap.end()) return nullptr;
-  return I->second.get();
+std::string CallGraphCtu::uniqueNameResolve(Decl *F)
+{
+    std::string s="";
+    if(!F)  return "none";
+    FunctionDecl *FD=F->getAsFunction();
+    if(!FD)
+        return "none";
+    s=FD->getNameInfo().getAsString();
+    for(unsigned i=0;i<FD->getNumParams();++i)
+    {
+        std::string arg=FD->parameters()[i]->getType().getAsString();
+        s=s+arg;
+      }
+   return s;
 }
+
+std::string CallGraphCtu::uniqueNameResolve(const Decl *F) const
+{
+    std::string s="";
+    const FunctionDecl *FD=F->getAsFunction();
+    if(!FD)
+        return "none";
+    s=FD->getNameInfo().getAsString();
+    for(unsigned i=0;i<FD->getNumParams();++i)
+    {
+        std::string arg=FD->parameters()[i]->getType().getAsString();
+        s=s+arg;
+      }
+   return s;
+}
+
+
+CallGraphNode *CallGraphCtu::getNode(const Decl *F) const {
+  const std::string str=uniqueNameResolve(F);
+    //std::string str="";
+  FunctionNameMapTy::const_iterator I = FunctionNameMap.find(str);
+  if (I == FunctionNameMap.end()) return nullptr;
+  return I->second;
+}
+
 
 CallGraphNode *CallGraphCtu::getOrInsertNode(Decl *F) {
   if (F && !isa<ObjCMethodDecl>(F))
     F = F->getCanonicalDecl();
-
-  std::unique_ptr<CallGraphNode> &Node = FunctionMap[F];
+  std::string str=uniqueNameResolve(F);
+  CallGraphNode *Node = FunctionNameMap[str];
   if (Node)
-    return Node.get();
-
-  Node = make_unique<CallGraphNode>(F);
+        return Node;
+  Node=new CallGraphNode(F);
   // Make Root node a parent of all functions to make sure all are reachable.
-  if (F)
-    Root->addCallee(Node.get());
-  return Node.get();
-}
-/*
-void mergeDuplicateChildren(CallGraphNode* cg_node)
-{
-  assert(cg_node && "Not a valid node");
-  if(cg_node->empty())
-  {
-    //Node has not children, end traversal
-    return;
-  }
-  
-  for(clang::CallGraphNode::iterator it = cg_node->begin(); it != cg_node->end(); it++)
-  {
-    //Given identical child nodes, redirect all callers to the one with children, remove others
-    
-	  FunctionDecl *fdecl=dyn_cast<FunctionDecl>(it);
-    for(auto itt = it; itt != cg_node->end(); itt++)
-    {
-	    FunctionDecl *fdecl2=dyn_cast<FunctionDecl>(itt);      
+  if (F){
+      FunctionNameMap[str]=Node;
+      FunctionMap[F]=Node;
+      Root->addCallee(Node);
     }
-    mergeDuplicateChildren(*it);
-  }
-}*/
+  return Node;
+}
+
+
 void CallGraphCtu::finishGraphConstruction(){
-  for(NodesCtuType::iterator it=NodesWithCtuDecl.begin();it!=NodesWithCtuDecl.end();it++)
-  {
-    CallGraphNode *parent,*child;
-    Decl *childDecl;
-    childDecl=it->first;
-    parent=it->second;
-    if(FunctionDecl *func=dyn_cast<FunctionDecl>(childDecl))
-	  {
-	    std::string Name=func->getNameInfo().getAsString();
-	    std::pair <DeclNameType::iterator,DeclNameType::iterator> range;
-	    range = ExportedDecl.equal_range(Name);
-	    for (DeclNameType::iterator it1=range.first; it1!=range.second; ++it1)
-	    {
-	      child=it1->second;
-	      FunctionDecl *fdecl=dyn_cast<FunctionDecl>(child->getDecl());
-        std::string name2=fdecl->getNameInfo().getAsString();
-	      if(equalFuncDecls(fdecl,func)){
-	        parent->addCallee(child);
-	        removeRootChild(child);
-	      }
-	    } 
-	  }
-  }
-  /*auto root = getRoot();
-  mergeDuplicateChildren(root);*/
-}  
+    for(NodesCtuType::iterator it=NodesWithCtuDecl.begin();it!=NodesWithCtuDecl.end();it++)
+     {
+       CallGraphNode *parent,*child;
+       Decl *childDecl;
+       childDecl=it->first;
+       parent=it->second;
+       if(FunctionDecl *func=dyn_cast<FunctionDecl>(childDecl))
+	 {
+	   std::string Name=func->getNameInfo().getAsString();
+	   std::pair <DeclNameType::iterator,DeclNameType::iterator> range;
+	   range = ExportedDecl.equal_range(Name);
+	   for (DeclNameType::iterator it1=range.first; it1!=range.second; ++it1)
+	     {
+	       child=it1->second; 
+	       FunctionDecl *fdecl=dyn_cast<FunctionDecl>(child->getDecl());
+	       if(equalFuncDecls(fdecl,func)){
+		 parent->addCallee(child);
+		 removeRootChild(child);
+	       }
+	     } 
+	 }
+     }
+  }  
 
 
 void CallGraphCtu::print(raw_ostream &OS) const {
@@ -298,6 +313,7 @@ struct DOTGraphTraits<const CallGraphCtu*> : public DefaultDOTGraphTraits {
     if (CG->getRoot() == Node) {
       return "< root >";
     }
+      if(!Node) return "LnotFound";
     if (const NamedDecl *ND = dyn_cast_or_null<NamedDecl>(Node->getDecl()))
       return ND->getNameAsString();
     else

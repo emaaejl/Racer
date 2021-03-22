@@ -447,10 +447,9 @@ void SteengaardPAVisitor::updatePAOnCallExpr(CallExpr *call, long ActOutArg) {
   else
   {
     //Assume it's a library function, and don't continue further
-    if(debugLabel > 2){
-      llvm::errs() << "Following function is a sink for pointer analysis.\n";
-      callee->dump();
-    }
+  //  llvm::errs() << "Following function is a sink for pointer analysis.\n";
+  //  callee->dump();
+
     return;
   }
 }

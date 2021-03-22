@@ -213,26 +213,10 @@ int main(int argc, const char **argv) {
     if(DebugLevel==O1) debugLabel=1;
     else if(DebugLevel==O2) debugLabel=2;
     else if(DebugLevel==O3) debugLabel=3;
-    if(Event.c_str()){
+  /*  if(Event.c_str()){
       std::ofstream EventArg(Event.c_str(),std::ios::app);
       if (EventArg.good())
 	{
-	  /*
-	  llvm::errs()<<"Source Files\n";
-	  std::vector<std::string>::const_iterator is=op.getSourcePathList().begin();
-	   while(is!=op.getSourcePathList().end())
-	    {
-	      llvm::errs()<<"\n File: "<<*is;
-	      is++;
-	    }
-	  std::vector<std::string>::iterator fit= StartFuncsForEvents.begin();
-	  while(fit!=StartFuncsForEvents.end())
-	    {
-	      llvm::errs()<<"\n "<<*fit;
-	      fit++;
-	    }
-	  */
-	  
 	  
 	  std::clock_t c_start = std::clock();
 
@@ -250,30 +234,17 @@ int main(int argc, const char **argv) {
 	  ToolCG.getFiles().PrintStats();
 
 	  c_start = std::clock();
-	  //llvm::errs()<<"Scanning files for events, stored in"<<Event.c_str()<<"\n";
 	  EventRecorder Printer(EventArg,&cg,StartFuncsForEvents);
 	  MatchFinder Finder;
 	  
-	  //Finder.addMatcher(BindThread, &Printer);
-	  //Finder.addMatcher(BindActivator, &Printer);
-	  //Finder.addMatcher(JoinConfig, &Printer);
 	  Finder.addMatcher(Trigger, &Printer);
 	  Tool.run(newFrontendActionFactory(&Finder).get());
 
 	  c_end = std::clock();
 
 	  llvm::outs()<<"***Search for events completed in: "<<(c_end-c_start)/CLOCKS_PER_SEC<<" ms\n";
-
-	  /*for(auto it=vectCI.begin();it!=vectCI.end();it++)
-	    {
-	      FrontendAction *fact=(*it)->getFrontendAction();
-	      if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
-		cgFrontend->EndFrontendAction();
-	      it->get()->EndCompilerActionOnSourceFile();
-	      }*/
-
 	}  
-    }
+    }*/
     if(PAFlow) result = Tool.run(newFrontendActionFactory<PAFlowSensitiveFrontendAction>().get());
     if(Symb) {
       result = Tool.run(newFrontendActionFactory<SymbTabAction>().get());
@@ -297,22 +268,20 @@ int main(int argc, const char **argv) {
       CGFrontendFactory cgFact(cg,vectCI);
       result=Tool.run(&cgFact);
       cg.finishGraphConstruction();
-      if(debugLabel > 2)
-        cg.print(llvm::errs());
       cg.viewGraph();
       for(auto it=vectCI.begin();it!=vectCI.end();it++)
-	    {
-	      FrontendAction *fact=(*it)->getFrontendAction();
-	      if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
-	        cgFrontend->EndFrontendAction();
-	      it->get()->EndCompilerActionOnSourceFile();
-	    }
+	{
+	  FrontendAction *fact=(*it)->getFrontendAction();
+	  if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
+	    cgFrontend->EndFrontendAction();
+	  it->get()->EndCompilerActionOnSourceFile();
+	}
     }
     if(RA){
       if(op.getSourcePathList().size()!=2) 
       {
-	      errs()<<"Command Format Error, exactly two sources are required to run the command. See, e.g. racer --help\n";
-	      return 0;	  
+	errs()<<"Command Format Error, exactly two sources are required to run the command. See, e.g. racer --help\n";
+	return 0;	  
       }
 
       // header Analysis
@@ -345,7 +314,7 @@ int main(int argc, const char **argv) {
       cg.finishGraphConstruction();
       llvm::errs()<<"CG construction finished\n";
       if(debugLabel>2)
-	      cg.viewGraph();      
+	  cg.viewGraph();
 
       // Race Detection
       /*  std::vector< std::string > sop=op.getSourcePathList();
@@ -362,17 +331,19 @@ int main(int argc, const char **argv) {
       racer->setCallGraph(&cg);
       std::ofstream Method1(FUNC1.c_str()), Method2(FUNC2.c_str());
       if (Method1.good() && Method2.good()) 
-	      racer->setTaskStartPoint(FUNC1.c_str(),FUNC2.c_str());
+	racer->setTaskStartPoint(FUNC1.c_str(),FUNC2.c_str());
       racer->extractPossibleRaces();
       
       // Finish compiler instances
       for(auto it=vectCI.begin();it!=vectCI.end();it++)
-	    {
-	      FrontendAction *fact=(*it)->getFrontendAction();
-	      if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
-	        cgFrontend->EndFrontendAction();
-	      it->get()->EndCompilerActionOnSourceFile();
-	    }      
+	{
+	  FrontendAction *fact=(*it)->getFrontendAction();
+	  if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
+	    cgFrontend->EndFrontendAction();
+	  it->get()->EndCompilerActionOnSourceFile();
+	}
+      
     }
-  return result;
+
+   return result;
 }

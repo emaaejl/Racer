@@ -40,10 +40,10 @@ public:
     
     visitorPA->initPA(visitorSymTab->getSymTab());	 
     visitorPA->TraverseDecl(Context.getTranslationUnitDecl());
-    visitorPA->showStatistics();
+   // visitorPA->showStatistics();
     TranslationUnitDecl *tu=Context.getTranslationUnitDecl();
-    CG.setPA(visitorPA); 
-    CG.addToCallGraph(tu);
+    CG.setPA(visitorPA);
+    CG.addToCallGraph(tu,&Context);
     //Context.getSourceManager().getFileManager().PrintStats();
   }    
 };

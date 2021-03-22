@@ -1,15 +1,18 @@
-set( LLVM_LINK_COMPONENTS
-  ${LLVM_TARGETS_TO_BUILD}
-  Option
-  Support
-  )
+#set( LLVM_LINK_COMPONENTS
+#  ${LLVM_TARGETS_TO_BUILD}
+#  Option
+#  Support
+#  )
 
 #set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-#set( SOURCES
-#	steengaardPA.cpp
-#	steengaardPA.h
-#	macros.h
-#)
+
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15.4" CACHE STRING "Minimum OS X deployment version" FORCE)
+
+set( SOURCES
+	steengaardPA.cpp
+	steengaardPA.h
+	macros.h
+)
 
 add_clang_executable(racer
   callGraphAnalysis.h	
