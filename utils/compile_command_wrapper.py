@@ -18,7 +18,7 @@ def compile_command_to_racer_script(compile_command_path, racer_runnerscript_out
     #Parse compile-command (which is json)
     with open(racer_runnerscript_outpath, "w") as outfile:
         #Run racer with timing
-        outfile.write(f"/usr/bin/time -v {PATH_TO_RACER} --cg -p={compile_command_path} \\\n")
+        outfile.write(f"/usr/bin/time -v {PATH_TO_RACER} --cg -p={os.path.split(compile_command_path)[0]} \\\n")
         outfile.write(f"{filesToCheck}\n")
     with open(os.path.splitext(racer_runnerscript_outpath)[0] + "_metrics.sh", "w") as metrics_out:
         #Run counting tool for LoC count, if such a tool exists
