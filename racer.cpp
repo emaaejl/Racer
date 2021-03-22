@@ -22,6 +22,8 @@
 #include <memory>
 #include <ctime>
 
+#include "TimerWrapper.h"
+
 using namespace clang::driver;
 using namespace clang::tooling;
 using namespace llvm;
@@ -265,17 +267,21 @@ int main(int argc, const char **argv) {
     if(CG){
       CallGraph cg;
       std::vector<std::unique_ptr<clang::CompilerInstanceCtu> > vectCI;
+      TimerWrapper cg_timer = TimerWrapper("Call Graph Generation");
       CGFrontendFactory cgFact(cg,vectCI);
+      cg_timer.startTimers();
       result=Tool.run(&cgFact);
       cg.finishGraphConstruction();
+      cg_timer.stopTimers();
+      cg_timer.printInfo(std::cout);
       cg.viewGraph();
       for(auto it=vectCI.begin();it!=vectCI.end();it++)
-	{
-	  FrontendAction *fact=(*it)->getFrontendAction();
-	  if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
-	    cgFrontend->EndFrontendAction();
-	  it->get()->EndCompilerActionOnSourceFile();
-	}
+      {
+        FrontendAction *fact=(*it)->getFrontendAction();
+        if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
+          cgFrontend->EndFrontendAction();
+        it->get()->EndCompilerActionOnSourceFile();
+      }
     }
     if(RA){
       if(op.getSourcePathList().size()!=2) 

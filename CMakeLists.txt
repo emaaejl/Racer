@@ -15,6 +15,8 @@ set( SOURCES
 )
 
 add_clang_executable(racer
+  TimerWrapper.h 
+  TimerWrapper.cpp
   callGraphAnalysis.h	
   eventHandler.h	
   globalVarHandler.h
