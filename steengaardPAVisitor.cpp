@@ -416,9 +416,9 @@ void SteengaardPAVisitor::updatePAOnFuncCall(FunctionDecl *calleeDecl,
                                              long ActualOutArg) {
   FuncSignature *fsig = NULL;
   fsig = _symbTab->lookupfunc(calleeDecl);
-  if (fsig->params.size() != ActualInArgs.size())
-    return;
   if (fsig) {
+    if (fsig->params.size() != ActualInArgs.size())
+      return;
     long int i = 0;
     for (std::set<Expr *>::iterator it = ActualInArgs.begin();
          it != ActualInArgs.end(); it++, i++)
