@@ -195,7 +195,7 @@ public:
       if (!Compiler->hasDiagnostics())
 	return false;
       Compiler->createSourceManager(*Files);
-
+      
       Compiler->setFrontendAction(ScopedToolAction.get());
 #ifdef WITH_TIME_SAMPLING
       CTU_action.startTimers();
@@ -394,14 +394,15 @@ int main(int argc, const char **argv) {
 	racer->setTaskStartPoint(FUNC1.c_str(),FUNC2.c_str());
       racer->extractPossibleRaces();
       
-      // Finish compiler instances
-      for(auto it=vectCI.begin();it!=vectCI.end();it++)
-	{
-	  FrontendAction *fact=(*it)->getFrontendAction();
-	  if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
-	    cgFrontend->EndFrontendAction();
-	  it->get()->EndCompilerActionOnSourceFile();
-	}
+      
+      // Finish compiler instances (BUG: Causes infinite loop somewhere)
+      /*for(auto it=vectCI.begin();it!=vectCI.end();it++)
+      {
+        FrontendAction *fact=(*it)->getFrontendAction();
+        if(CGFrontendAction *cgFrontend=static_cast<CGFrontendAction *>(fact)) 
+          cgFrontend->EndFrontendAction();
+        it->get()->EndCompilerActionOnSourceFile();
+      }*/
       
     }
 

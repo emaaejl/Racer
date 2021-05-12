@@ -12,6 +12,7 @@
 #include <memory>
 using namespace std;
 
+//#define DEBUG
 CSteensgaardPA::
 CSteensgaardPA()
 {
@@ -263,11 +264,15 @@ CSteensgaardPA::
 ProcessAssignStmt(long int e1, long int e2)
 {
    // Dereference the variables
-   #ifdef DEBUG
+   #ifdef DEBUG_STEENSGAARD
    std::cout << __FILE__ << ":" << __LINE__ << " " << "debug: e1="<<e1<<" e2="<<e2<<"\n";
    #endif
    e1 = deref(e1);
    e2 = deref(e2);
+   if(e1 < 0 || e2 < 0){
+      llvm::outs() << __FILE__ << ":" << __LINE__ << " " << "We hit something that should not happen. For now we break the pointer analysis here\n"; 
+      return;
+   }
    // Get the types of the variables
    CSteensgaardPAType * t1 = gettype(e1);
    CSteensgaardPAType * t2 = gettype(e2);

@@ -14,6 +14,8 @@
 #include <memory>
 #include "symtab.h"
 
+//#define DEBUG_STEENSGAARD
+
 class CSteensgaardPAType;
 class CSteensgaardPARefType;
 class CSteensgaardPALambaType;

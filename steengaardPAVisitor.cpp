@@ -343,14 +343,18 @@ void SteengaardPAVisitor::updatePAonBinaryExpr(clang::BinaryOperator *bop) {
     }
   }
 }
-
 bool SteengaardPAVisitor::VisitStmt(Stmt *st) {
   LineCount++;
+  #ifdef DEBUG_STEENSGAARD
+    //st->dumpPretty(*astContext);
+    st->getSourceRange().dump(astContext->getSourceManager());
+    llvm::errs() << "\n";
+  #endif
   if (clang::BinaryOperator *bop = dyn_cast<clang::BinaryOperator>(st))
     updatePAonBinaryExpr(bop);
-  else if (clang::UnaryOperator *uop = dyn_cast<clang::UnaryOperator>(st))
+  else if (clang::UnaryOperator *uop = dyn_cast<clang::UnaryOperator>(st)){
     updatePAonUnaryExpr(uop);
-
+  }
   // Update PA for function calls
   // if x=f(Args), this st is processed by both updatePAOnCallExpr and
   // updatePAonBinaryExpr
@@ -416,9 +420,12 @@ void SteengaardPAVisitor::updatePAOnFuncCall(FunctionDecl *calleeDecl,
                                              long ActualOutArg) {
   FuncSignature *fsig = NULL;
   fsig = _symbTab->lookupfunc(calleeDecl);
+  if(!fsig) return;   //pointer is missing a nullability type specifier 
+
+  if (fsig->params.size() != ActualInArgs.size())
+    return;
+
   if (fsig) {
-    if (fsig->params.size() != ActualInArgs.size())
-      return;
     long int i = 0;
     for (std::set<Expr *>::iterator it = ActualInArgs.begin();
          it != ActualInArgs.end(); it++, i++)
@@ -430,9 +437,9 @@ void SteengaardPAVisitor::updatePAOnFuncCall(FunctionDecl *calleeDecl,
 }
 
 void SteengaardPAVisitor::updatePAOnCallExpr(CallExpr *call, long ActOutArg) {
+
   std::set<Expr *> ActualInArgs;
-  for (clang::CallExpr::arg_iterator it = call->arg_begin();
-       it != call->arg_end(); it++)
+  for (clang::CallExpr::arg_iterator it = call->arg_begin(); it != call->arg_end(); it++)
     ActualInArgs.insert(*it);
   FunctionDecl *callee = call->getDirectCallee();
   if (!callee) {
@@ -441,15 +448,16 @@ void SteengaardPAVisitor::updatePAOnCallExpr(CallExpr *call, long ActOutArg) {
     std::set<FunctionDecl *>::iterator I = fCalls.begin(), E = fCalls.end();
     for (; I != E; I++)
       updatePAOnFuncCall(*I, ActualInArgs, ActOutArg);
-  } 
-  else if(!astContext->getSourceManager().isInSystemHeader(callee->getSourceRange().getBegin()))
+  }
+  else if (callee->getSourceRange().getBegin().isValid() &&
+           !astContext->getSourceManager().isInSystemHeader(
+               callee->getSourceRange().getBegin()))
     updatePAOnFuncCall(callee, ActualInArgs, ActOutArg);
   else
   {
-    //Assume it's a library function, and don't continue further
-  //  llvm::errs() << "Following function is a sink for pointer analysis.\n";
-  //  callee->dump();
-
+    // Assume it's a library function, and don't continue further
+    //  llvm::errs() << "Following function is a sink for pointer analysis.\n";
+    //  callee->dump();
     return;
   }
 }

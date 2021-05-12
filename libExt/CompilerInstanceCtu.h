@@ -87,6 +87,7 @@ class Sema;
 class SourceManager;
 class TargetInfo;
 
+//#define DEBUG
 
 class CompilerInstanceCtu : public CompilerInstance {
   
@@ -172,7 +173,9 @@ public:
     if (hasSourceManager() && !Act.isModelParsingAction())
       getSourceManager().clearIDTables();
     //std::unique_ptr<clang::CGFrontendAction> cf=&Act;
-
+    #ifdef DEBUG
+    llvm::errs() << "Processing file: " << FIF.getFile() << "\n";
+    #endif
     
     // CGFrontendAction should be parametric to compilerinstance
     CGFrontendAction *cf=static_cast<CGFrontendAction *>(&Act);
